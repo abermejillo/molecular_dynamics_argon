@@ -9,7 +9,7 @@ Every week you should
 1. write down **on the day of the lecture** a short plan (bullet list is sufficient) of how you want to 
    reach the weekly milestones. Think about how to distribute work in the group, 
    what pieces of code functionality need to be implemented.
-2. write about your progress **until Sunday, 23:59** before the next lecture with respect to the milestones.
+2. write about your progress **until Monday, 23:59** before the next lecture with respect to the milestones.
    Substantiate your progress with links to code, pictures or test results. Reflect on the
    relation to your original plan.
 
