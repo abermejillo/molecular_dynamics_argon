@@ -1,3 +1,4 @@
+from math import floor
 import numpy as np
 
 """
@@ -17,8 +18,10 @@ UNITS: in International System
 
 # Input parameters
 N = 3 # number of particles
-L = 100*1E-10 # box length
-T = 300 # temperature
+L = 1E-3 # box length
+T = 100 # temperature
+At = 1E-14 # time-step
+run_time = 1E-12 # run time of the simulation
 
 # Global constants
 KB = 1.3806E-23 # Boltzmann constant 
@@ -30,23 +33,35 @@ MASS = 6.6335209E-26 # Argon particle mass
 pos = L*np.random.rand(N, 2)
 vel = np.sqrt(KB*T/MASS)*np.random.rand(N, 2)
 
-# Compute relative positions and distances
+# Euler method
+# Variable initialization
 rel_pos = np.zeros((N,N,2))
 rel_dist = np.zeros((N,N))
 
-for i in range(N):
-    for j in range(i):
-        rel_pos[i,j] = pos[i] - pos[j]
-        rel_dist[i,j] = np.linalg.norm(rel_pos[i,j])
+# Iterations
+for t in np.arange(0, run_time + At, At):
 
-# Force calculation using the Lennard-Jones potential       
-force = np.zeros((N,N,2)) # Forces between pairs
+    # Compute relative positions and distances
+    for i in range(N):
+        for j in range(i):
+            rel_pos[i,j] = pos[i] - pos[j]
+            rel_dist[i,j] = np.linalg.norm(rel_pos[i,j])
 
-for i in range(N):
-    for j in range(i):
-        force[i,j] = 24*EPSILON*rel_pos[i,j] * (2*SIGMA**12/rel_dist[i,j]**14 - SIGMA**6/rel_dist[i,j]**8)
+    # Force calculation using the Lennard-Jones potential       
+    force = np.zeros((N,N,2)) # Forces between pairs
+    
+    for i in range(N):
+        for j in range(i):
+            force[i,j] = 24*EPSILON*rel_pos[i,j] * (2*SIGMA**12/rel_dist[i,j]**14 - SIGMA**6/rel_dist[i,j]**8)
 
-force = force + force.transpose((1,0,2)) # Fill upper triangle of the matrix 
+    force = force + force.transpose((1,0,2)) # Fill upper triangle of the matrix 
 
-# Total force exerted on each particle
-total_force = force.sum(1) 
+    # Total force exerted on each particle
+    total_force = force.sum(1)
+
+    # Update velocities and positions
+    pos = pos + vel*At
+    vel = vel + total_force*At/MASS
+
+    # Check periodic boundary conditions
+    pos = pos - np.floor(pos/L)*L
