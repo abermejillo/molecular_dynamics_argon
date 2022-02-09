@@ -17,10 +17,10 @@ UNITS: in International System
 """
 
 # Input parameters
-N = 100 # number of particles
+N = 3 # number of particles
 L = 1E-6 # box length
 T = 300 # temperature
-At = 1E-13 # time-step
+At = 1E-11 # time-step
 run_time = 1E-11 # run time of the simulation
 
 # Global constants
@@ -47,10 +47,12 @@ for k, t in enumerate(np.arange(0, run_time + At, At)):
             rel_pos[i,j] = pos[i] - pos[j]
             rel_dist[i,j] = np.linalg.norm(rel_pos[i,j])
 
+    rel_pos_ = rel_pos.copy() # for plotting
+
     # minimum image convention (for the periodic boundary conditions)
-    wrong_pairs = np.where(rel_dist > L/2)
-    rel_pos[wrong_pairs] = rel_pos[wrong_pairs] - np.floor(rel_pos[wrong_pairs]/L)*L
-    rel_dist[wrong_pairs] -= L
+    wrong_pairs = np.where(np.abs(rel_pos) > L/2)
+    rel_pos[wrong_pairs] = rel_pos[wrong_pairs] - np.sign(rel_pos[wrong_pairs])*L
+    rel_dist[wrong_pairs] = np.linalg.norm(rel_pos[wrong_pairs]) # update relative distances
 
     # fill upper triangle of the matrix and
     # avoiding division by zero in the diagonal when calculating LJ force
@@ -71,11 +73,26 @@ for k, t in enumerate(np.arange(0, run_time + At, At)):
     # Check periodic boundary conditions
     pos = pos - np.floor(pos/L)*L
 
-    # plotting
+    # plotting for checking the interactions
     if True:
         for i in range(N):
-            plt.plot(pos[i,0], pos[i,1], ".")
-        plt.xlim(0,L)
-        plt.ylim(0,L)
+            # plot normal box and its eight neighbours
+            plt.plot(pos[i,0], pos[i,1], "r.")
+            plt.plot(pos[i,0]+L, pos[i,1], "r.")
+            plt.plot(pos[i,0], pos[i,1]+L, "r.")
+            plt.plot(pos[i,0]+L, pos[i,1]+L, "r.")
+            plt.plot(pos[i,0]-L, pos[i,1], "r.")
+            plt.plot(pos[i,0], pos[i,1]-L, "r.")
+            plt.plot(pos[i,0]-L, pos[i,1]-L, "r.")
+            plt.plot(pos[i,0]-L, pos[i,1]+L, "r.")
+            plt.plot(pos[i,0]+L, pos[i,1]-L, "r.")
+
+            for j in range(i):
+                plt.plot([pos[j,0], pos[j,0] + rel_pos_[i,j,0]], [pos[j,1], pos[j,1] + rel_pos_[i,j,1]], "y-") # no BC correction
+                plt.plot([pos[j,0], pos[j,0] + rel_pos[i,j,0]], [pos[j,1], pos[j,1] + rel_pos[i,j,1]], "b--") # correction for BC
+
+        plt.plot([0,0,L,L,0],[0,L,L,0,0], "g-") # plot square for normal box
+        plt.xlim(-L/2, 3*L/2)
+        plt.ylim(-L/2, 3*L/2)
         plt.savefig("{}.png".format(k))
         plt.cla()
