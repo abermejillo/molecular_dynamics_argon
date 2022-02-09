@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 """
 Initial attempt: 3 Ar particles in 2D
@@ -17,11 +18,11 @@ UNITS: in International System
 """
 
 # Input parameters
-N = 3 # number of particles
+N = 4 # number of particles
 L = 1E-6 # box length
 T = 300 # temperature
 At = 1E-11 # time-step
-run_time = 1E-11 # run time of the simulation
+run_time = 1E-9 # run time of the simulation
 
 # Global constants
 KB = 1.3806E-23 # Boltzmann constant 
@@ -34,31 +35,24 @@ pos = L*np.random.rand(N, 2)
 vel = np.sqrt(KB*T/MASS) - 2*np.sqrt(KB*T/MASS)*np.random.rand(N, 2)
 
 # Euler method
-# Variable initialization
-rel_pos = np.zeros((N,N,2))
-rel_dist = np.zeros((N,N,1))
-
-# Iterations
 for k, t in enumerate(np.arange(0, run_time + At, At)):
 
-    # Compute relative positions and distances
-    for i in range(N):
-        for j in range(i):
-            rel_pos[i,j] = pos[i] - pos[j]
-            rel_dist[i,j] = np.linalg.norm(rel_pos[i,j])
+    # Compute relative positions
+    pos1 = np.repeat(pos[:, np.newaxis, :], N, axis=1)
+    pos2 = np.repeat(pos[np.newaxis, :, :], N, axis=0)
+    rel_pos = pos1 - pos2
 
     rel_pos_ = rel_pos.copy() # for plotting
 
     # minimum image convention (for the periodic boundary conditions)
     wrong_pairs = np.where(np.abs(rel_pos) > L/2)
     rel_pos[wrong_pairs] = rel_pos[wrong_pairs] - np.sign(rel_pos[wrong_pairs])*L
-    rel_dist[wrong_pairs] = np.linalg.norm(rel_pos[wrong_pairs]) # update relative distances
 
-    # fill upper triangle of the matrix and
-    # avoiding division by zero in the diagonal when calculating LJ force
-    rel_dist = rel_dist + rel_dist.transpose((1,0,2)) 
-    rel_dist[np.diag_indices(N)] = 1 
-    rel_pos = rel_pos + rel_pos.transpose((1,0,2))
+    # Compute relative distance
+    rel_dist = np.linalg.norm(rel_pos, axis=2) # axis 2 contains the cartesian coordinates
+    rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation
+    
+    rel_dist[np.diag_indices(N)] = 1 # avoiding division by zero in the diagonal when calculating LJ force
 
     # Force calculation using the Lennard-Jones potential  
     force = 24*EPSILON*rel_pos*(2*SIGMA**12/rel_dist**14 - SIGMA**6/rel_dist**8)
