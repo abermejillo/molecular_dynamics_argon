@@ -26,6 +26,17 @@ You will find how to include [links](https://docs.gitlab.com/ee/user/markdown.ht
 useful.
 
 ## Week 1
+
+**Bullet List**
+- Write `main.py` with some basic working code. This includes:
+   - Write the numerical constants for the simulation.
+   - Initializing uniformly random velocity and position.
+   - Calculate relative position and relative distance matrices for the LJ force.
+   - Iterate over time, simulating the velocities and positions using Euler method.
+   - Every iteration, check if particles are outside of domain to fulfill periodic boundary conditions (if so, displace them accordingly).
+   - Calculate energy to check if it is conserved along time.
+- Once code works, divide it in function blocks (and use `skeleton.py` as template for the functions)
+
 (due 14 February 2022, 23:59)
 
 
