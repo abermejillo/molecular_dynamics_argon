@@ -18,21 +18,36 @@ UNITS: in International System
 """
 
 # Input parameters
-N = 4 # number of particles
+N = 5 # number of particles
 L = 1E-6 # box length
 T = 300 # temperature
 At = 1E-11 # time-step
-run_time = 1E-9 # run time of the simulation
+run_time = 10E-9 # run time of the simulation
 
 # Global constants
 KB = 1.3806E-23 # Boltzmann constant 
-SIGMA = 3.405E-10 # parameter of LJ potential
+#SIGMA = 3.405E-10 # parameter of LJ potential
+SIGMA = 0.5E-7
 EPSILON = 119.8*KB # parameter of LJ potential
 MASS = 6.6335209E-26 # Argon particle mass
+
+# Functions to compute the energy of the system
+def potential_energy(distance): # Potential energy function
+    return 4*EPSILON*(SIGMA**12/distance**12-SIGMA**6/distance**6)
+
+def total_energy(rel_dist, vel): # 
+    kin_energy = np.sum(0.5*MASS*np.linalg.norm(vel)**2)
+    mask = np.ones(rel_dist.shape,dtype=bool)
+    mask[np.diag_indices(N)] = False 
+    pot_energy = np.sum(potential_energy(rel_dist),where=mask)/2 # The diagonal terms are skipped (no self-interaction)
+    return kin_energy + pot_energy
 
 # Velocity and Position initialization (uniformly random)
 pos = L*np.random.rand(N, 2)
 vel = np.sqrt(KB*T/MASS) - 2*np.sqrt(KB*T/MASS)*np.random.rand(N, 2)
+
+# Total energy storage vector
+tot_energy=[]
 
 # Euler method
 for k, t in enumerate(np.arange(0, run_time + At, At)):
@@ -51,14 +66,12 @@ for k, t in enumerate(np.arange(0, run_time + At, At)):
     # Compute relative distance
     rel_dist = np.linalg.norm(rel_pos, axis=2) # axis 2 contains the cartesian coordinates
     rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation
-    
     rel_dist[np.diag_indices(N)] = 1 # avoiding division by zero in the diagonal when calculating LJ force
-
     # Force calculation using the Lennard-Jones potential  
     force = 24*EPSILON*rel_pos*(2*SIGMA**12/rel_dist**14 - SIGMA**6/rel_dist**8)
 
     # Total force exerted on each particle
-    total_force = force.sum(1)
+    total_force = np.sum(force,axis=0)
 
     # Update velocities and positions
     pos = pos + vel*At
@@ -66,6 +79,9 @@ for k, t in enumerate(np.arange(0, run_time + At, At)):
 
     # Check periodic boundary conditions
     pos = pos - np.floor(pos/L)*L
+
+    # Save the total energy
+    tot_energy += [total_energy(rel_dist, vel)]
 
     # plotting for checking the interactions
     if True:
@@ -90,3 +106,10 @@ for k, t in enumerate(np.arange(0, run_time + At, At)):
         plt.ylim(-L/2, 3*L/2)
         plt.savefig("{}.png".format(k))
         plt.cla()
+plt.close()
+
+# Plotting the energy
+
+plt.figure(2)
+plt.plot(np.linspace(0, run_time, num = int(run_time/At)+2),tot_energy)
+plt.show()
