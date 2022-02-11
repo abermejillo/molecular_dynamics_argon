@@ -18,11 +18,11 @@ UNITS: in International System
 """
 
 # Input parameters
-N = 2 # number of particles
-L = 1E-8 # box length
+N = 8 # number of particles
+L = 1E-6 # box length
 T = 300 # temperature
-At = 1E-10 # time-step
-run_time = 1E-8 # run time of the simulation
+At = 1E-11 # time-step
+run_time = 1E-9 # run time of the simulation
 
 # Global constants
 KB = 1.3806E-23 # Boltzmann constant 
@@ -51,7 +51,6 @@ def total_energy(rel_dist, vel):
 # Velocity and Position initialization (uniformly random)
 pos = L*np.random.rand(N, 2)
 vel = np.sqrt(KB*T/MASS) - 2*np.sqrt(KB*T/MASS)*np.random.rand(N, 2)
-vel = np.zeros((N,2))
 
 # Total energy storage vector
 tot_energy=[]
@@ -114,5 +113,5 @@ for k, t in enumerate(np.arange(0, run_time + At, At)):
 
 
 # Plotting the energy
-plt.plot(np.linspace(0, run_time, int(run_time/At)+2),tot_energy)
+plt.plot(np.linspace(0, run_time, len(tot_energy)),tot_energy)
 plt.show()
