@@ -7,21 +7,11 @@ you have a good reason to do so.
 import numpy as np
 
 # Global constants
-def MASS():
-    MASS = 6.6335209E-26 # Argon particle mass
-    return MASS
+KB = 1.3806E-23 # Boltzmann constant 
+SIGMA = 3.405E-10 # parameter of LJ potential
+EPSILON = 119.8*KB # parameter of LJ potential
+MASS = 6.6335209E-26 # Argon particle mass
 
-def SIGMA():
-    SIGMA = 3.405E-10 # parameter of LJ potential
-    return SIGMA
-
-def KB():
-    KB = 1.3806E-23 # Boltzmann constant
-    return KB
-
-def EPSILON():
-    EPSILON = 119.8*KB() # parameter of LJ potential
-    return EPSILON
 
 # Functions for simulation
 def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim):
@@ -83,7 +73,7 @@ def simulate_step(pos, vel, timestep, box_dim):
 
     # Update velocities and positions
     pos = pos + vel*timestep
-    vel = vel + total_force*timestep/MASS()
+    vel = vel + total_force*timestep/MASS
 
     # Check periodic boundary conditions
     pos = pos - np.floor(pos/box_dim)*box_dim
@@ -174,7 +164,7 @@ def lj_force(rel_pos, rel_dist):
     rel_dist[np.diag_indices(N)] = 1 # avoiding division by zero in the diagonal when calculating LJ force
 
     # Force calculation using the Lennard-Jones potential
-    force = 24*EPSILON()*rel_pos*(2*SIGMA()**12/rel_dist**14 - SIGMA()**6/rel_dist**8)
+    force = 24*EPSILON*rel_pos*(2*SIGMA**12/rel_dist**14 - SIGMA**6/rel_dist**8)
 
     # Total force exerted on each particle
     total_force = force.sum(1)
@@ -217,7 +207,7 @@ def kinetic_energy(vel):
         The total kinetic energy of the system.
     """
 
-    return 0.5*MASS()*(vel**2).sum()
+    return 0.5*MASS*(vel**2).sum()
 
 
 def potential_energy(rel_dist):
@@ -236,7 +226,7 @@ def potential_energy(rel_dist):
     """
 
     mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool)[:,:,np.newaxis] # mask for skipping diagonal terms
-    pot_energy = 4*EPSILON()*(SIGMA()**12/rel_dist**12-SIGMA()**6/rel_dist**6)
+    pot_energy = 4*EPSILON*(SIGMA**12/rel_dist**12-SIGMA**6/rel_dist**6)
     pot_energy = np.sum(pot_energy, where=mask)/2 # The diagonal terms are skipped (no self-interaction)
     return pot_energy
 
