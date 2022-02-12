@@ -195,38 +195,43 @@ def kinetic_energy(vel):
     return 0.5*MASS*(vel**2).sum()
 
 
-def potential_energy(rel_dist):
+def potential_energy(pos, box_dim):
     """
     Computes the potential energy of an atomic system.
 
     Parameters
     ----------
-    rel_dist : np.ndarray(N,N)
-        Relative particle distances as obtained from atomic_distances
+    pos : np.ndarray(N,2)
+        Positions of the particles in cartesian space
+    box_dim : float
+        Dimension of the simulation box
 
     Returns
     -------
     float
         Total potential energy of the system
     """
-
-    mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool)[:,:,np.newaxis] # mask for skipping diagonal terms
+    rel_pos, rel_dist = atomic_distances(pos, box_dim)
+    rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating potential energy
+    mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool) # mask for skipping diagonal terms
     pot_energy = 4*EPSILON*(SIGMA**12/rel_dist**12-SIGMA**6/rel_dist**6)
     pot_energy = np.sum(pot_energy, where=mask)/2 # The diagonal terms are skipped (no self-interaction)
 
     return pot_energy
 
 
-def total_energy(rel_dist, vel): 
+def total_energy(pos, vel, box_dim): 
     """
     Computes the total energy of an atomic system
 
     Parameters
     ----------
-    rel_dist : np.ndarray(N,N)
-        Relative particle distances as obtained from atomic_distances
+    pos : np.ndarray(N,2)
+        Positions of the particles in cartesian space
     vel: np.ndarray(N,2)
         Velocities of particles
+    box_dim : float
+        Dimension of the simulation box
 
     Returns
     -------
@@ -235,7 +240,7 @@ def total_energy(rel_dist, vel):
     """
 
     kin_energy = kinetic_energy(vel)
-    pot_energy = potential_energy(rel_dist)
+    pot_energy = potential_energy(pos, box_dim)
 
     return kin_energy + pot_energy
 

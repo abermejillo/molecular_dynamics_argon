@@ -34,18 +34,13 @@ vel = np.sqrt(sim.KB*T/sim.MASS) - 2*np.sqrt(sim.KB*T/sim.MASS)*np.random.rand(N
 tot_energy=[]
 
 # Simulation
-# Check that the energy is conserved 
 
-for t in range(Niter):
+for t in range(Niter): # temporal loop to check that simulate.py works
     pos, vel = sim.simulate(pos,vel,int(run_time/time_step),time_step,L)
-    rel_pos, rel_dist = sim.atomic_distances(pos,L)
-    tot_energy += [sim.total_energy(rel_pos,vel)]
+    tot_energy += [sim.total_energy(pos, vel, L)] 
 
-print(tot_energy[1:5])
-
-# Plotting the energy
+# Plotting the energy to check conservation
 ax = plt.axes()
 plt.plot(np.linspace(0, Niter, len(tot_energy)),tot_energy)
-plt.axis([0, 100, 1E-21, 0.2E-19])
 plt.show()
 
