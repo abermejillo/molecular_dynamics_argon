@@ -6,10 +6,11 @@ EPSILON = 119.8*KB # parameter of LJ potential for Argon atoms in SI
 MASS = 6.6335209E-26 # Argon particle mass in SI
 
 
-def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim):
+def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name):
     """
     Molecular dynamics simulation using the Euler algorithm
     to integrate the equations of motion. 
+    Saves data for each iteration using 'save_data' function. 
 
     Parameters
     ----------
@@ -23,22 +24,25 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim):
         Duration of a single simulation step
     box_dim : float
         Dimensions of the simulation box
+    file_name : str
+        Name of the CSV file to store the simulation data
 
     Returns
     -------
-    pos : np.ndarra(N,2)
-        Positions of the atoms in Cartesian space after the simulation
-    vel : np.ndarra(N,2)
-        Velocities of the atoms in Cartesian space after the simulation
+    None
     """
 
-    pos = init_pos
-    vel = init_vel
+    pos, vel = init_pos, init_vel
+    f = open(file_name, "w")
+    save_data(f, 0, pos, vel) # save initial position
     
-    for k in range(num_tsteps):
+    for k in np.arange(1, num_tsteps+1):
         pos, vel = simulate_step(pos, vel, timestep, box_dim)
+        save_data(f, k*timestep, pos, vel)
 
-    return pos, vel
+    f.close()
+
+    return 
 
 
 def simulate_step(pos, vel, timestep, box_dim):
@@ -213,6 +217,7 @@ def potential_energy(pos, box_dim):
     """
     rel_pos, rel_dist = atomic_distances(pos, box_dim)
     rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating potential energy
+
     mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool) # mask for skipping diagonal terms
     pot_energy = 4*EPSILON*(SIGMA**12/rel_dist**12-SIGMA**6/rel_dist**6)
     pot_energy = np.sum(pot_energy, where=mask)/2 # The diagonal terms are skipped (no self-interaction)
@@ -252,9 +257,9 @@ def init_velocity(num_atoms, temp):
     Parameters
     ----------
     num_atoms : int
-        The number of particles in the system.
+        Number of particles in the system
     temp : float
-        The (unitless) temperature of the system.
+        (unitless) temperature of the system
 
     Returns
     -------
@@ -263,3 +268,72 @@ def init_velocity(num_atoms, temp):
     """
 
     return
+
+
+def save_data(file_class, time, pos, vel):
+    """
+    Writes to a CSV file the following information:
+    time | pos_x1, pos_y1, pos_x2, pos_y2, ... | vel_x1, vel_y1, vel_x2, vel_y2, ...
+    (number of columns is 1 + 2*N + 2*N, where N = number of particles)
+
+    Parameters
+    ----------
+    file_class : TextIOWrapper 
+        File in which to write the data, e.g. file_class = open("output.csv", "w")
+    time : float
+        Time of the current positions and velocities
+    pos : np.ndarray(N,2)
+        Positions of the particles
+    vel: np.ndarray(N,2)
+        Velocities of particles
+
+    Returns
+    -------
+    file_class : TextIOWrapper 
+        File in which to the data has been written
+    """
+
+    N = pos.shape[0] # number of particles
+    pos, vel = pos.reshape(-1), vel.reshape(-1) # reshape as: pos_x1, pos_y1, pos_x2, pos_y2, ... | vel_x1, vel_y1, vel_x2, vel_y2, ...
+
+    data = "{:0.25e}".format(time)
+    data += (",{:0.25e}"*2*N).format(*pos)
+    data += (",{:0.25e}"*2*N).format(*vel)
+    data += "\n"
+
+    file_class.write(data)
+
+    return file_class
+
+
+def load_data(file_name):
+    """
+    Loads simulation data from CSV file that has the same structure
+    as specified in 'save_data' function
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+
+    Returns
+    -------
+    time : np.ndarray(M)
+        Time steps of the simulation
+    pos : np.ndarray(M,N,2)
+        Positions of the particles for all the time steps fo the simulation
+    vel: np.ndarray(M,N,2)
+        Velocities of particles for all the time steps fo the simulation
+    """
+
+    data = np.loadtxt(file_name, delimiter=",")
+    N = int((data.shape[1]-1)/(2*2)) # 2 dimensions + pos and vel stored
+    M = data.shape[0]
+
+    time = data[:,0]
+    pos = data[:,1:2*N+1]
+    pos = pos.reshape(M,N,2)
+    vel = data[:,2*N+1:4*N+1]
+    vel = vel.reshape(M,N,2)
+
+    return time, pos, vel
