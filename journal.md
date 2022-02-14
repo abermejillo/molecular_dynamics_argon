@@ -41,25 +41,30 @@ useful.
 
 ### **Progress**
 
-All of the milestones set for this week have been completed. First we wrote all the code in main.py. It initialized the particles and run the time evolution of the system [link to particular commit](https://gitlab.kwant-project.org/computational_physics/projects/Project-1_abermejillo_dbedialaunetar_mserraperalta/-/commit/e25d039188a0e8e7fceb45092361b36e0a65c9bd). This completes most of block (1) of the bullet list.
+All of the milestones set for this week have been completed. First we wrote all the code in `main.py`. It initialized the particles and run the time evolution of the system [link to particular commit](https://gitlab.kwant-project.org/computational_physics/projects/Project-1_abermejillo_dbedialaunetar_mserraperalta/-/commit/e25d039188a0e8e7fceb45092361b36e0a65c9bd). This completes most of block (1) of the bullet list.
 
 Afterwards,  we optimized the code and changed the relative positions taking into account the periodic boundary conditions [link to particular commit](https://gitlab.kwant-project.org/computational_physics/projects/Project-1_abermejillo_dbedialaunetar_mserraperalta/-/commit/f7deb3540ece2e4ad3cc08ce28c869d4e06e876b).
 
 Then, we added the computation of the total energy of the system [link to particular commit](https://gitlab.kwant-project.org/computational_physics/projects/Project-1_abermejillo_dbedialaunetar_mserraperalta/-/commit/037d679ccd07f29414b13573f86c39a880d6f394). With this we fully completed block (1).
 
-Finally, we structured the code by adding all functionalities into functions in a file called [simulate.py](https://gitlab.kwant-project.org/computational_physics/projects/Project-1_abermejillo_dbedialaunetar_mserraperalta/-/blob/master/simulate.py) and added plotting functionalities with a file called [plotting.py](https://gitlab.kwant-project.org/computational_physics/projects/Project-1_abermejillo_dbedialaunetar_mserraperalta/-/blob/master/plotting.py). Now, in [main.py](https://gitlab.kwant-project.org/computational_physics/projects/Project-1_abermejillo_dbedialaunetar_mserraperalta/-/blob/master/main.py) we only need to specify the simulation parameters and call the appropriate functions. This fulfils (2) in the bullet list.
+Finally, we structured the code by adding all functionalities into functions in a file called `simulate.py` and added plotting functionalities in a file called `plotting.py`. Now, in `main.py` we only need to specify the simulation parameters and call the appropriate functions. This fulfils (2) in the bullet list.
 
 Some of the results obtained with the actual version of the code are shown hereafter.
 
 1. GIF showing the dynamics of the system:
 
-![Sample Video](Results/dynamics_1.gif)
+![Sample Video](results/dynamics_1.gif)
 
 2. Energy conservation:
 
-![alt text](Results/Energy_1.png "Total Energy (t)")
+![alt text](results/energy_1.png "Total Energy (t)")
 
-We can see how the particles evolve smoothly and interact with eachother (noticeable when they get close to eachother). If we look at the energy we notice an apparently big step taht would suggest that the energy is not conserved. However, we can observe that the step is 5 orders lower that that of the actual energy. Nonetheless, sometimes there are problems with energy conservation. We expect those to be solved once we normalize our equation so that all the numbers with which we are working are of the same order of magnitude. 
+We can see how the particles evolve smoothly and interact with eachother (noticeable when they get close to eachother). If we look at the energy we notice an apparently big step that would suggest that the energy is not conserved. However, we can observe that the step is 5 orders lower that that of the actual energy. Nonetheless, when using a higher number of particles ($`N \approx 20`$) there are problems with energy conservation if the box is not very large. We expect those to be solved upon normalization and using the velocity-Verlet algorithm. 
+
+3. Other checks
+
+- Take minimum distance between particles when using periodic BC, see [this gif](results/closest_relative_distance.gif)
+- Attractive force when particles are further than $`\sigma`$, see [this gif](results/attractive_force.gif)
 
 In conclusion, all milestones have been more than fulfilled. We have a code that works, it is quite well structured and the few tests that have been done give good results given the stage of the project.  
 
