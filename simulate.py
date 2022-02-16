@@ -13,12 +13,14 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, metho
     Molecular dynamics simulation using the Euler algorithm
     to integrate the equations of motion. 
     Saves data for each iteration using 'save_data' function. 
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
-    init_pos : np.ndarra(N,2)
+    init_pos : np.ndarra(N,d)
         Initial positions of the atoms in Cartesian space
-    init_vel : np.ndarray(N,2)
+    init_vel : np.ndarray(N,d)
         Initial velocities of the atoms in Cartesian space
     num_tsteps : int
         Total number of simulation steps
@@ -28,6 +30,8 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, metho
         Dimensions of the simulation box
     file_name : str
         Name of the CSV file to store the simulation data
+    method : "verlet" or "euler"
+        Selects method for the time evoluiton algorithm
 
     Returns
     -------
@@ -36,6 +40,7 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, metho
 
     pos, vel = init_pos, init_vel
     f = open(file_name, "w")
+    f.write("N={} d={}\n".format(pos.shape[0], pos.shape[1])) # header
     save_data(f, 0, pos, vel) # save initial position
     
     for k in np.arange(1, num_tsteps+1):
@@ -58,12 +63,14 @@ def simulate_step_euler(pos, vel, timestep, box_dim):
     """
     Computes positions and velocities of particles at next time step
     using Euler method.
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
-    pos : np.ndarray(N,2)
+    pos : np.ndarray(N,d)
         Positions of the atoms in Cartesian space
-    vel : np.ndarray(N,2)
+    vel : np.ndarray(N,d)
         Velocities of the atoms in Cartesian space
     timestep : float
         Duration of a single simulation step
@@ -72,9 +79,9 @@ def simulate_step_euler(pos, vel, timestep, box_dim):
 
     Returns
     -------
-    pos : np.ndarra(N,2)
+    pos : np.ndarra(N,d)
         Positions of the atoms in Cartesian space after one time step
-    vel : np.ndarra(N,2)
+    vel : np.ndarra(N,d)
         Velocities of the atoms in Cartesian space after one time step
     """
     
@@ -95,12 +102,14 @@ def simulate_step_verlet(pos, vel, timestep, box_dim):
     """
     Computes positions and velocities of particles at next time step
     using velocity-Verlet method.
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
-    pos : np.ndarray(N,2)
+    pos : np.ndarray(N,d)
         Positions of the atoms in Cartesian space
-    vel : np.ndarray(N,2)
+    vel : np.ndarray(N,d)
         Velocities of the atoms in Cartesian space
     timestep : float
         Duration of a single simulation step
@@ -109,9 +118,9 @@ def simulate_step_verlet(pos, vel, timestep, box_dim):
 
     Returns
     -------
-    pos : np.ndarra(N,2)
+    pos : np.ndarra(N,d)
         Positions of the atoms in Cartesian space after one time step
-    vel : np.ndarra(N,2)
+    vel : np.ndarra(N,d)
         Velocities of the atoms in Cartesian space after one time step
     """
     
@@ -135,29 +144,25 @@ def simulate_step_verlet(pos, vel, timestep, box_dim):
 def atomic_distances(pos, box_dim):
     """
     Calculates relative positions and distances between particles.
+    N = number of particles
+    d = dimensionality of the box
 
     parameters
     ----------
-    pos : np.ndarray(N,2)
+    pos : np.ndarray(N,d)
         Positions of the particles in cartesian space
     box_dim : float
         Dimension of the simulation box
 
     returns
     -------
-    rel_pos : np.ndarray(N,N,2)
+    rel_pos : np.ndarray(N,N,d)
         Relative positions of particles without taking into account periodic boundary conditions
-        Let pos be the following matrix
-            x1 y1
-            x2 y2
-            x3 y3
-            .  .
-            .  .
-            .  .
+        Let pos be the following matrix [x1, x2, x3, ... ] where xi are d-dimensional vectors
         Then, rel_pos is
-            0       x1-x2       x1-x3       ...         |       0       y1-y2       y1-y3       ...
-            x2-x1   0           x2-x3       ...         |       y2-y1   0           y2-y3       ...
-            x3-x1   x3-x2       0           ...         |       y3-y1   y3-y2       0           ...
+            0       x1-x2       x1-x3       ...        
+            x2-x1   0           x2-x3       ...      
+            x3-x1   x3-x2       0           ...      
             .
             .
             .
@@ -165,7 +170,8 @@ def atomic_distances(pos, box_dim):
 
     rel_dist : np.ndarray(N,N)
         The distance between particles
-        Each element is sqrt((xi-xj)**2+(yi-yj)**2), where i denotes row and j denotes column
+        Each element is sqrt(sum_alpha (xi_alpha-xj_alpha)**2), 
+        where i denotes row and j denotes column and alpha the cartesian coordinate
     """
 
     N = np.shape(pos)[0] # Number of particles
@@ -187,17 +193,19 @@ def atomic_distances(pos, box_dim):
 def lj_force(rel_pos, rel_dist):
     """
     Calculates the net forces on each atom.
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
-    rel_pos : np.ndarray(N,N,2)
+    rel_pos : np.ndarray(N,N,d)
         Relative particle positions as obtained from atomic_distances
     rel_dist : np.ndarray(N,N)
         Relative particle distances as obtained from atomic_distances
 
     Returns
     -------
-    np.ndarray(N,2)
+    np.ndarray(N,d)
         Net force acting on each particle due to all other particles
     """
 
@@ -214,6 +222,8 @@ def lj_force(rel_pos, rel_dist):
 def fcc_lattice(num_atoms, lat_const):
     """
     Initializes a system of atoms on an fcc lattice.
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
@@ -224,7 +234,7 @@ def fcc_lattice(num_atoms, lat_const):
 
     Returns
     -------
-    pos_vec : np.ndarray
+    pos_vec : np.ndarray(N,d)
         Array of particle coordinates
     """
 
@@ -234,10 +244,12 @@ def fcc_lattice(num_atoms, lat_const):
 def kinetic_energy(vel):
     """
     Computes the kinetic energy of an atomic system.
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
-    vel: np.ndarray(N,2)
+    vel: np.ndarray(N,d)
         Velocities of particles
 
     Returns
@@ -252,10 +264,12 @@ def kinetic_energy(vel):
 def potential_energy(pos, box_dim):
     """
     Computes the potential energy of an atomic system.
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
-    pos : np.ndarray(N,2)
+    pos : np.ndarray(N,d)
         Positions of the particles in cartesian space
     box_dim : float
         Dimension of the simulation box
@@ -278,12 +292,14 @@ def potential_energy(pos, box_dim):
 def total_energy(pos, vel, box_dim): 
     """
     Computes the total energy of an atomic system
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
-    pos : np.ndarray(N,2)
+    pos : np.ndarray(N,d)
         Positions of the particles in cartesian space
-    vel: np.ndarray(N,2)
+    vel: np.ndarray(N,d)
         Velocities of particles
     box_dim : float
         Dimension of the simulation box
@@ -303,6 +319,8 @@ def total_energy(pos, vel, box_dim):
 def init_velocity(num_atoms, temp):
     """
     Initializes the system with Gaussian distributed velocities.
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
@@ -313,7 +331,7 @@ def init_velocity(num_atoms, temp):
 
     Returns
     -------
-    vel_vec : np.ndarray
+    vel_vec : np.ndarray(N,d)
         Array of particle velocities
     """
 
@@ -323,8 +341,8 @@ def init_velocity(num_atoms, temp):
 def save_data(file_class, time, pos, vel):
     """
     Writes to a CSV file the following information:
-    time | pos_x1, pos_y1, pos_x2, pos_y2, ... | vel_x1, vel_y1, vel_x2, vel_y2, ...
-    (number of columns is 1 + 2*N + 2*N, where N = number of particles)
+    time | pos_x1_alpha1, pos_x1_alpha2..., pos_x2_alpha1, pos_x2_alpha2, ... | vel_x1_alpha1, vel_x1_alpha2..., vel_x2_alpha1, vel_x2_alpha2, ... 
+    (number of columns is 1 + d*N + d*N, where N = number of particles and d = dimensionality of the space)
 
     Parameters
     ----------
@@ -332,9 +350,9 @@ def save_data(file_class, time, pos, vel):
         File in which to write the data, e.g. file_class = open("output.csv", "w")
     time : float
         Time of the current positions and velocities
-    pos : np.ndarray(N,2)
+    pos : np.ndarray(N,d)
         Positions of the particles
-    vel: np.ndarray(N,2)
+    vel: np.ndarray(N,d)
         Velocities of particles
 
     Returns
@@ -344,11 +362,12 @@ def save_data(file_class, time, pos, vel):
     """
 
     N = pos.shape[0] # number of particles
-    pos, vel = pos.reshape(-1), vel.reshape(-1) # reshape as: pos_x1, pos_y1, pos_x2, pos_y2, ... | vel_x1, vel_y1, vel_x2, vel_y2, ...
+    d = pos.shape[1] # dimensionality of the box
+    pos, vel = pos.reshape(-1), vel.reshape(-1) # reshape as: pos_x1, pos_y1, ... pos_x2, pos_y2, ... | vel_x1, vel_y1, ... vel_x2, vel_y2, ...
 
     data = "{:0.25e}".format(time)
-    data += (",{:0.25e}"*2*N).format(*pos)
-    data += (",{:0.25e}"*2*N).format(*vel)
+    data += (",{:0.25e}"*d*N).format(*pos)
+    data += (",{:0.25e}"*d*N).format(*vel)
     data += "\n"
 
     file_class.write(data)
@@ -359,7 +378,10 @@ def save_data(file_class, time, pos, vel):
 def load_data(file_name):
     """
     Loads simulation data from CSV file that has the same structure
-    as specified in 'save_data' function
+    as specified in 'save_data' function. 
+    M = number of time steps
+    N = number of particles
+    d = dimensionality of the box
 
     Parameters
     ----------
@@ -370,20 +392,27 @@ def load_data(file_name):
     -------
     time : np.ndarray(M)
         Time steps of the simulation
-    pos : np.ndarray(M,N,2)
+    pos : np.ndarray(M,N,d)
         Positions of the particles for all the time steps fo the simulation
-    vel: np.ndarray(M,N,2)
+    vel: np.ndarray(M,N,d)
         Velocities of particles for all the time steps fo the simulation
     """
 
-    data = np.loadtxt(file_name, delimiter=",")
-    N = int((data.shape[1]-1)/(2*2)) # 2 dimensions + pos and vel stored
+    # load header information
+    f = open(file_name, "r")
+    header = f.readline()
+    f.close()
+    N, d = header.split(" ")[:2]
+    N, d = int(N.replace("N=", "")), int(d.replace("d=", ""))
+
+    # load data
+    data = np.loadtxt(file_name, delimiter=",", skiprows=1)
     M = data.shape[0]
 
     time = data[:,0]
-    pos = data[:,1:2*N+1]
-    pos = pos.reshape(M,N,2)
-    vel = data[:,2*N+1:4*N+1]
-    vel = vel.reshape(M,N,2)
+    pos = data[:,1:d*N+1]
+    pos = pos.reshape(M,N,d)
+    vel = data[:,d*N+1:2*d*N+1]
+    vel = vel.reshape(M,N,d)
 
     return time, pos, vel
