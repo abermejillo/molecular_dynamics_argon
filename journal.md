@@ -72,6 +72,16 @@ In conclusion, all milestones have been more than fulfilled. We have a code that
 
 
 ## Week 2
+
+### **Bullet List**
+
+1. Convert to dimensionless units (including deriving the expression of the kinetic energy and changing the scripts) @abermejillo
+2. Implement the minimal image convention (done by @mserraperalta in Week 1)
+3. Change space dimension from 2D to 3D @dbedialaunetar
+4. Update existing plotting functions from 2D to 3D (if necessary) @abermejillo @mserraperalta @dbedialaunetar
+5. Start working with the velocity-Verlet algorithm @abermejillo @mserraperalta @dbedialaunetar
+6. Start implementing the initialization of positions onto an fcc lattice and velocities with Maxwell-Boltzmann distribution @abermejillo @mserraperalta @dbedialaunetar
+
 (due 21 February 2022, 23:59)
 
 
