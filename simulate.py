@@ -8,7 +8,7 @@ EPSILON = 119.8*KB # parameter of LJ potential for Argon atoms in SI
 MASS = 6.6335209E-26 # Argon particle mass in SI
 
 
-def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name):
+def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, method="verlet"):
     """
     Molecular dynamics simulation using the Euler algorithm
     to integrate the equations of motion. 
@@ -39,15 +39,22 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name):
     save_data(f, 0, pos, vel) # save initial position
     
     for k in np.arange(1, num_tsteps+1):
-        pos, vel = simulate_step(pos, vel, timestep, box_dim)
+        print("\rtime step : {:7d}/{}".format(k, num_tsteps), end="")
+
+        if method == "verlet":
+            pos, vel = simulate_step_verlet(pos, vel, timestep, box_dim)
+        if method == "euler":
+            pos, vel = simulate_step_euler(pos, vel, timestep, box_dim)
+
         save_data(f, k*timestep, pos, vel)
 
+    print("")
     f.close()
 
     return 
 
 
-def simulate_step(pos, vel, timestep, box_dim):
+def simulate_step_euler(pos, vel, timestep, box_dim):
     """
     Computes positions and velocities of particles at next time step
     using Euler method.
@@ -77,6 +84,47 @@ def simulate_step(pos, vel, timestep, box_dim):
     # Update velocities and positions with Euler method
     pos = pos + vel*timestep
     vel = vel + total_force*timestep
+
+    # Update positions due to periodic BC
+    pos = pos - np.floor(pos/box_dim)*box_dim
+
+    return pos, vel
+
+
+def simulate_step_verlet(pos, vel, timestep, box_dim):
+    """
+    Computes positions and velocities of particles at next time step
+    using velocity-Verlet method.
+
+    Parameters
+    ----------
+    pos : np.ndarray(N,2)
+        Positions of the atoms in Cartesian space
+    vel : np.ndarray(N,2)
+        Velocities of the atoms in Cartesian space
+    timestep : float
+        Duration of a single simulation step
+    box_dim : float
+        Dimensions of the simulation box
+
+    Returns
+    -------
+    pos : np.ndarra(N,2)
+        Positions of the atoms in Cartesian space after one time step
+    vel : np.ndarra(N,2)
+        Velocities of the atoms in Cartesian space after one time step
+    """
+    
+    rel_pos, rel_dist = atomic_distances(pos, box_dim)
+    total_force = lj_force(rel_pos, rel_dist)
+
+    # Update velocities and positions with velocity-Verlet method
+    pos = pos + vel*timestep + 0.5*timestep**2*total_force
+
+    rel_pos, rel_dist = atomic_distances(pos, box_dim)
+    total_force_next = lj_force(rel_pos, rel_dist)
+
+    vel = vel + 0.5*(total_force + total_force_next)*timestep
 
     # Update positions due to periodic BC
     pos = pos - np.floor(pos/box_dim)*box_dim
