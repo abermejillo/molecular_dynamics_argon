@@ -1,5 +1,7 @@
 import numpy as np
 
+# These constants do not play a role anymore. Will leave them here for the moment. 
+
 KB = 1.3806E-23 # Boltzmann constant in SI
 SIGMA = 3.405E-10 # parameter of LJ potential for Argon atoms in SI
 EPSILON = 119.8*KB # parameter of LJ potential for Argon atoms in SI
@@ -74,7 +76,7 @@ def simulate_step(pos, vel, timestep, box_dim):
 
     # Update velocities and positions with Euler method
     pos = pos + vel*timestep
-    vel = vel + total_force*timestep/MASS
+    vel = vel + total_force*timestep
 
     # Update positions due to periodic BC
     pos = pos - np.floor(pos/box_dim)*box_dim
@@ -155,7 +157,7 @@ def lj_force(rel_pos, rel_dist):
     rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
 
     # Force calculation using the Lennard-Jones potential
-    force = 24*EPSILON*rel_pos*(2*SIGMA**12/rel_dist**14 - SIGMA**6/rel_dist**8)
+    force = 24*rel_pos*(2/rel_dist**14 - 1/rel_dist**8)
     total_force = force.sum(1)
 
     return total_force
@@ -196,7 +198,7 @@ def kinetic_energy(vel):
         Total kinetic energy of the system
     """
 
-    return 0.5*MASS*(vel**2).sum()
+    return 0.5*(vel**2).sum()
 
 
 def potential_energy(pos, box_dim):
@@ -219,7 +221,7 @@ def potential_energy(pos, box_dim):
     rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating potential energy
 
     mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool) # mask for skipping diagonal terms
-    pot_energy = 4*EPSILON*(SIGMA**12/rel_dist**12-SIGMA**6/rel_dist**6)
+    pot_energy = 4*(1/rel_dist**12-1/rel_dist**6)
     pot_energy = np.sum(pot_energy, where=mask)/2 # The diagonal terms are skipped (no self-interaction)
 
     return pot_energy
