@@ -43,6 +43,7 @@ def GIF_2D(gif_name, data_file, num_frames, box_dim):
         print("PLOTTING AND SAVING FRAMES... ({}/{})\r".format(f+1, num_frames), end="")
 
         ax = plot_pos_2D(ax, pos[t], box_dim)
+        ax.set_title("t={:0.3f}".format(time[t]))
         fig.tight_layout()
         fig.savefig("tmp-plot/pair_int_2D{:05d}.png".format(f))
         plt.cla() # clear axis
@@ -51,7 +52,7 @@ def GIF_2D(gif_name, data_file, num_frames, box_dim):
     print("\n", end="")
 
     print("BUILDING GIF... ")
-    with imageio.get_writer(gif_name, mode='I', duration=1/30) as writer: # 30 fps
+    with imageio.get_writer(gif_name, mode='I', duration=3/num_frames) as writer: # 30 fps
         for filename in ["tmp-plot/pair_int_2D{:05d}.png".format(f) for f in range(len(save_frame))]:
             image = imageio.imread(filename)
             writer.append_data(image)
@@ -60,7 +61,7 @@ def GIF_2D(gif_name, data_file, num_frames, box_dim):
     return
 
 
-def plot_pos_2D(ax, pos, L, central_box=True):
+def plot_pos_2D(ax, pos, L, central_box=True, relative_pos=False):
     """
     Plots positions of particles (and box) in 2D
 
@@ -74,6 +75,8 @@ def plot_pos_2D(ax, pos, L, central_box=True):
         Dimensions of the simulation box
     central_box : bool
         If True, plots square box
+    relative_pos : bool
+        If True, plots line between closest pairs of all particles
 
     Returns
     -------
@@ -98,6 +101,13 @@ def plot_pos_2D(ax, pos, L, central_box=True):
 
     if central_box: # plot square for central box
         ax.plot([0,0,L,L,0],[0,L,L,0,0], "g-") 
+
+    if relative_pos:
+        rel_pos, rel_dist = sim.atomic_distances(pos, L)
+        for i in range(pos.shape[0]):
+            for j in range(pos.shape[0]):
+                if i == j: continue
+                ax.plot([pos[i,0], pos[i,0]+rel_pos[j,i,0]], [pos[i,1], pos[i,1]+rel_pos[j,i,1]], "b--")
 
     ax.set_xlim(-L/2, 3*L/2)
     ax.set_ylim(-L/2, 3*L/2)
