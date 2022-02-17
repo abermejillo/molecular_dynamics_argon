@@ -222,8 +222,6 @@ def lj_force(rel_pos, rel_dist):
 def fcc_lattice(num_atoms, lat_const):
     """
     Initializes a system of atoms on an fcc lattice.
-    N = number of particles
-    d = dimensionality of the box
 
     Parameters
     ----------
@@ -234,11 +232,62 @@ def fcc_lattice(num_atoms, lat_const):
 
     Returns
     -------
-    pos_vec : np.ndarray(N,d)
+    pos_vec : np.ndarray(num_atoms,3)
         Array of particle coordinates
     """
 
-    return
+    n = int(np.floor((num_atoms/4)**(1/3))) # Minimum number of nodes that the lattice will have in each direction
+
+    # Vectors that define the atom basis
+    A = np.zeros([4,3])
+    A[1,:] = np.array([1,1,0])*1/2
+    A[2,:] = np.array([1,0,1])*1/2
+    A[3,:] = np.array([0,1,1])*1/2
+
+    # Generate positions of fcc atoms associated to n^3-node cube
+    pos_vec = np.zeros([num_atoms,3])
+    p = 0 # Counter
+    flag = False # When the counter reaches num_atoms, we have finished
+    for i in range(n):
+        if flag:
+            break
+        for j in range(n):
+            if flag:
+                break
+            for k in range(n+1):
+                if flag:
+                    break
+                for q in range(4):
+                    pos_vec[p,:] = np.array([i,j,k])+A[q,:]
+                    p += 1
+                    print(p)
+                    if p == num_atoms:
+                        flag = True
+                        break
+    for k in range(n+1):
+        if flag:
+            break
+        for j in range(n+1):
+            if flag:
+                break
+            for q in range(4):
+                pos_vec[p,:] = np.array([n,j,k])+A[q,:]
+                p += 1
+                if p == num_atoms:
+                    flag = True
+                    break
+        for i in range(n):
+            if flag:
+                break
+            for q in range(4):
+                pos_vec[p,:] = np.array([i,n,k])+A[q,:]
+                p += 1
+                if p == num_atoms:
+                    flag = True
+                    break
+    pos_vec = pos_vec*lat_const
+
+    return pos_vec
 
 
 def kinetic_energy(vel):
