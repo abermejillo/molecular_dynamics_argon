@@ -23,5 +23,5 @@ sim.simulate(init_pos, init_vel, num_tsteps, run_time/num_tsteps, L, "output.csv
 plot.GIF_2D("movie.gif", "output.csv", 300, L) # all timesteps plotted with num_frames = num_tsteps+1
 
 # Check energy conservation
-plot.E_vs_t("output.csv", L)
+plot.E_vs_t("output.csv", L, kinetic_potential=True)
 plot.E_conservation("output.csv", L)

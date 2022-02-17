@@ -43,7 +43,7 @@ def GIF_2D(gif_name, data_file, num_frames, box_dim):
         print("PLOTTING AND SAVING FRAMES... ({}/{})\r".format(f+1, num_frames), end="")
 
         ax = plot_pos_2D(ax, pos[t], box_dim)
-        ax.set_title("t={:0.3f}".format(time[t]))
+        ax.set_title("dimensionless t={:0.3f}".format(time[t]))
         fig.tight_layout()
         fig.savefig("tmp-plot/pair_int_2D{:05d}.png".format(f))
         plt.cla() # clear axis
@@ -112,8 +112,8 @@ def plot_pos_2D(ax, pos, L, central_box=True, relative_pos=False):
     ax.set_xlim(-L/2, 3*L/2)
     ax.set_ylim(-L/2, 3*L/2)
 
-    ax.set_xlabel("x coordinate [m]")
-    ax.set_ylabel("y coordinate [m]")
+    ax.set_xlabel("dimensionless x coordinate")
+    ax.set_ylabel("dimensionless y coordinate")
 
     # set axis' ticks inside figure
     ax.tick_params(axis="y",direction="in")
@@ -124,7 +124,7 @@ def plot_pos_2D(ax, pos, L, central_box=True, relative_pos=False):
     return ax
 
 
-def E_vs_t(data_file, box_dim):
+def E_vs_t(data_file, box_dim, kinetic_potential=False):
     """
     Plots energy as a function of time
 
@@ -134,6 +134,8 @@ def E_vs_t(data_file, box_dim):
         Name of the CSV file in which the data is stored
     box_dim : float
         Dimensions of the simulation box
+    kinetic_potential : bool
+        If True, plots also kinetic and potential energies
 
     Returns
     -------
@@ -142,18 +144,26 @@ def E_vs_t(data_file, box_dim):
 
     time, pos, vel = sim.load_data(data_file)
 
-    energy = []
+    E_total = []
+    E_kinetic = []
+    E_potential = []
     for k, t in enumerate(time):
-        energy += [sim.total_energy(pos[k], vel[k], box_dim)] 
+        E_kinetic += [sim.kinetic_energy(vel[k])] 
+        E_potential += [sim.potential_energy(pos[k], box_dim)]
+        E_total += [E_kinetic[-1] + E_potential[-1]] 
 
     fig = plt.figure(1)
     ax = fig.add_subplot(111)
-    ax.plot(time, energy, "-")
+    ax.plot(time, E_total, "-", label="total E", color="black")
+    if kinetic_potential:
+        ax.plot(time, E_kinetic, "-", label="kinetic E", color="red")
+        ax.plot(time, E_potential, "-", label="potential E", color="blue")
+        ax.legend(loc="best")
 
     ax.set_xlim(0, np.max(time))
 
-    ax.set_xlabel("time [s]")
-    ax.set_ylabel("energy [J]")
+    ax.set_xlabel("dimensionless time")
+    ax.set_ylabel("dimensionless energy")
 
     # set axis' ticks inside figure
     ax.tick_params(axis="y",direction="in")
@@ -185,20 +195,20 @@ def E_conservation(data_file, box_dim):
 
     time, pos, vel = sim.load_data(data_file)
 
-    energy = []
+    E_total = []
     for k, t in enumerate(time):
-        energy += [sim.total_energy(pos[k], vel[k], box_dim)] 
-    energy = np.array(energy)
+        E_total += [sim.total_energy(pos[k], vel[k], box_dim)] 
+    E_total = np.array(E_total)
 
-    rel_AE = (energy - np.average(energy))/energy
+    rel_AE = (E_total - np.average(E_total))/E_total
 
     fig = plt.figure(1)
     ax = fig.add_subplot(111)
-    ax.plot(time, rel_AE, "-")
+    ax.plot(time, rel_AE, "-", color="black")
 
     ax.set_xlim(0, np.max(time))
 
-    ax.set_xlabel("time [s]")
+    ax.set_xlabel("dimensionless time")
     ax.set_ylabel("relative energy difference")
 
     # set axis' ticks inside figure
