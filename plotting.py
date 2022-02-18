@@ -176,7 +176,7 @@ def plot_pos_2D(ax, pos, L, central_box=True, relative_pos=False):
 
     return ax
 
-def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False):
+def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=False):
     """
     Plots positions of particles (and box) in 3D
 
@@ -198,57 +198,54 @@ def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False):
     ax : matplotlib axis
         Axis in which particles have been plotted
     """
-    ax.set_xlim(-L/4, 5*L/4)
-    ax.set_xbound(-L/4, 5*L/4)
-    ax.set_ylim(-L/4, 5*L/4)
-    ax.set_ybound(-L/4, 5*L/4)
-    ax.set_zlim(-L/4, 5*L/4)
-    ax.set_zbound(-L/4, 5*L/4)
+    
     # plot central box and its eight neighbours
     for i in range(pos.shape[0]): # plot for all particles
         if central_box:
             ax.plot(pos[i,0]  , pos[i,1]  , ".", color="black") # central box
         else: 
             ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]  , "r.") # central box
+        if outer_boxes:
+            ax.plot(pos[i,0]+L, pos[i,1]  , pos[i,2]  , "r.") # permutations + _ _
+            ax.plot(pos[i,0]  , pos[i,1]+L, pos[i,2]  , "r.")
+            ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]+L, "r.")
 
-        #pos = pos[np.where(pos > -L/4)]
-        #pos = pos[np.where(pos < 5*L/4)]
+            ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]  , "r.") # permutations + + _
+            ax.plot(pos[i,0]  , pos[i,1]+L, pos[i,2]+L, "r.")
+            ax.plot(pos[i,0]+L, pos[i,1]  , pos[i,2]+L, "r.")
 
-        ax.plot(pos[i,0]+L, pos[i,1]  , pos[i,2]  , "r.") # permutations + _ _
-        ax.plot(pos[i,0]  , pos[i,1]+L, pos[i,2]  , "r.")
-        ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]+L, "r.")
+            ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]+L, "r.") # permutations + + + 
 
-        ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]  , "r.") # permutations + + _
-        ax.plot(pos[i,0]  , pos[i,1]+L, pos[i,2]+L, "r.")
-        ax.plot(pos[i,0]+L, pos[i,1]  , pos[i,2]+L, "r.")
+            ax.plot(pos[i,0]-L, pos[i,1]  , pos[i,2]  , "r.") # permutations - _ _
+            ax.plot(pos[i,0]  , pos[i,1]-L, pos[i,2]  , "r.")
+            ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]-L, "r.")
 
-        ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]+L, "r.") # permutations + + + 
+            ax.plot(pos[i,0]-L, pos[i,1]-L, pos[i,2]  , "r.") # permutations - - _
+            ax.plot(pos[i,0]-L, pos[i,1]  , pos[i,2]-L, "r.")
+            ax.plot(pos[i,0]  , pos[i,1]-L, pos[i,2]-L, "r.")
 
-        ax.plot(pos[i,0]-L, pos[i,1]  , pos[i,2]  , "r.") # permutations - _ _
-        ax.plot(pos[i,0]  , pos[i,1]-L, pos[i,2]  , "r.")
-        ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]-L, "r.")
+            ax.plot(pos[i,0]-L, pos[i,1]-L, pos[i,2]-L, "r.") # permutatinos - - - 
+                
+            ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]  , "r.") # permutations - + _
+            ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]  , "r.")
+            ax.plot(pos[i,0]-L, pos[i,1]  , pos[i,2]+L, "r.")
+            ax.plot(pos[i,0]+L, pos[i,1]  , pos[i,2]-L, "r.")
+            ax.plot(pos[i,0]  , pos[i,1]+L, pos[i,2]-L, "r.")
+            ax.plot(pos[i,0]  , pos[i,1]-L, pos[i,2]+L, "r.")
 
-        ax.plot(pos[i,0]-L, pos[i,1]-L, pos[i,2]  , "r.") # permutations - - _
-        ax.plot(pos[i,0]-L, pos[i,1]  , pos[i,2]-L, "r.")
-        ax.plot(pos[i,0]  , pos[i,1]-L, pos[i,2]-L, "r.")
+            ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]-L, "r.") # permutations + - -
+            ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]-L, "r.")
+            ax.plot(pos[i,0]-L, pos[i,1]-L, pos[i,2]+L, "r.")
 
-        ax.plot(pos[i,0]-L, pos[i,1]-L, pos[i,2]-L, "r.") # permutatinos - - - 
-             
-        ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]  , "r.") # permutations - + _
-        ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]  , "r.")
-        ax.plot(pos[i,0]-L, pos[i,1]  , pos[i,2]+L, "r.")
-        ax.plot(pos[i,0]+L, pos[i,1]  , pos[i,2]-L, "r.")
-        ax.plot(pos[i,0]  , pos[i,1]+L, pos[i,2]-L, "r.")
-        ax.plot(pos[i,0]  , pos[i,1]-L, pos[i,2]+L, "r.")
-
-        ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]-L, "r.") # permutations + - -
-        ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]-L, "r.")
-        ax.plot(pos[i,0]-L, pos[i,1]-L, pos[i,2]+L, "r.")
-
-        ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]+L, "r.") # permutations + + -
-        ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]+L, "r.")
-        ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]-L, "r.")
-
+            ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]+L, "r.") # permutations + + -
+            ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]+L, "r.")
+            ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]-L, "r.")
+            ax.set_xlim(-L, 2*L)
+            ax.set_ylim(-L, 2*L)
+            ax.set_zlim(-L, 2*L)
+    ax.set_xlim(0, L)
+    ax.set_ylim(0, L)
+    ax.set_zlim(0, L)
     if central_box: # plot square for central box
         ax.plot([0,L,L,0,0],[0,0,L,L,0],[0,0,0,0,0], "g-")
         ax.plot([0,0,L,L],[0,0,0,0],[0,L,L,0],"g-")
