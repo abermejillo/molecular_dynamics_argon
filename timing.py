@@ -48,6 +48,11 @@ rel_pos, rel_dist = sim.atomic_distances(pos, L)
 print("atomic_distances")
 %timeit sim.atomic_distances(pos, L)
 
+print("rel_dis np.linalg.norm")
+%timeit np.linalg.norm(rel_pos, axis=2)
+print("rel_dis np.eigsum")
+%timeit np.sqrt(np.einsum('ijk, ijk->ij', rel_pos, rel_pos, optimize="optimal"))
+
 total_force = sim.lj_force(rel_pos, rel_dist)
 print("lj_force")
 %timeit sim.lj_force(rel_pos, rel_dist)

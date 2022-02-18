@@ -185,7 +185,7 @@ def atomic_distances(pos, box_dim):
     rel_pos[wrong_pairs] = rel_pos[wrong_pairs] - np.sign(rel_pos[wrong_pairs])*box_dim
 
     # Compute relative distance
-    rel_dist = np.linalg.norm(rel_pos, axis=2) # axis 2 contains the cartesian coordinates
+    rel_dist = np.sqrt(np.einsum('ijk, ijk->ij', rel_pos, rel_pos, optimize="optimal"))
 
     return  rel_pos, rel_dist
 
