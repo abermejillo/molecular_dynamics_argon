@@ -20,7 +20,7 @@ init_vel = np.sqrt(sim.KB*T/sim.EPSILON) - 2*np.sqrt(sim.KB*T/sim.EPSILON)*np.ra
 sim.simulate(init_pos, init_vel, num_tsteps, run_time/num_tsteps, L, "output.csv", method=algorithm_method)
 
 # GIF for movement of particles
-plot.GIF_2D("movie.gif", "output.csv", 300, L) # all timesteps plotted with num_frames = num_tsteps+1
+plot.GIF_3D("movie.gif", "output.csv", 300, L) # all timesteps plotted with num_frames = num_tsteps+1
 
 # Check energy conservation
 plot.E_vs_t("output.csv", L, kinetic_potential=True)

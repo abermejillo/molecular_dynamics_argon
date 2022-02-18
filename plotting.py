@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import os
 import imageio
-
 import simulate as sim
 
 
@@ -60,6 +60,59 @@ def GIF_2D(gif_name, data_file, num_frames, box_dim):
 
     return
 
+def GIF_3D(gif_name, data_file, num_frames, box_dim):
+    """
+    Generates frames for the time evolution of particles in 2D
+    and stores them in "tmp-plot" folder as "pair_int_2D{:05d}.png". 
+
+    Parameters
+    ----------
+    gif_name : str
+        Name of the GIF file to be generated
+    data_file : str
+        Name of the CSV file in which the data is stored
+    num_frames : int
+        Number of total frames generated (max is 99999)
+    box_dim : float
+        Dimensions of the simulation box
+
+    Returns
+    -------
+    None
+    """
+
+    time, pos, vel = sim.load_data(data_file)
+    num_tsteps = len(time) 
+    save_frame = [int(i*(num_tsteps-1)/(num_frames-1)) for i in range(num_frames-1)] + [int(num_tsteps)-1] # timesteps in which to save frames
+
+    if "tmp-plot" not in os.listdir():
+        os.mkdir("tmp-plot")
+
+    # Create figure and save initial position
+    print("PLOTTING AND SAVING FRAMES... ({}/{})\r".format(1, num_frames), end="")
+    fig = plt.figure(1)
+    ax = fig.add_subplot(111, projection='3d')
+
+    for f, t in enumerate(save_frame):
+        print("PLOTTING AND SAVING FRAMES... ({}/{})\r".format(f+1, num_frames), end="")
+
+        ax = plot_pos_3D(ax, pos[t], box_dim)
+        ax.set_title("dimensionless t={:0.3f}".format(time[t]))
+        fig.tight_layout()
+        fig.savefig("tmp-plot/pair_int_3D{:05d}.png".format(f))
+        plt.cla() # clear axis
+
+    plt.clf()
+    print("\n", end="")
+
+    print("BUILDING GIF... ")
+    with imageio.get_writer(gif_name, mode='I', duration=3/num_frames) as writer: # 30 fps
+        for filename in ["tmp-plot/pair_int_3D{:05d}.png".format(f) for f in range(len(save_frame))]:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+    print("DONE")
+
+    return
 
 def plot_pos_2D(ax, pos, L, central_box=True, relative_pos=False):
     """
@@ -122,6 +175,112 @@ def plot_pos_2D(ax, pos, L, central_box=True, relative_pos=False):
     ax.xaxis.set_ticks_position('both')
 
     return ax
+
+def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False):
+    """
+    Plots positions of particles (and box) in 3D
+
+    Parameters
+    ----------
+    ax : matplotlib axis
+        Axis in which to plot the particles
+    pos : np.ndarray(N,3)
+        Positions of the atoms in Cartesian space
+    L : float
+        Dimensions of the simulation box
+    central_box : bool
+        If True, plots square box
+    relative_pos : bool
+        If True, plots line between closest pairs of all particles
+
+    Returns
+    -------
+    ax : matplotlib axis
+        Axis in which particles have been plotted
+    """
+    ax.set_xlim(-L/4, 5*L/4)
+    ax.set_xbound(-L/4, 5*L/4)
+    ax.set_ylim(-L/4, 5*L/4)
+    ax.set_ybound(-L/4, 5*L/4)
+    ax.set_zlim(-L/4, 5*L/4)
+    ax.set_zbound(-L/4, 5*L/4)
+    # plot central box and its eight neighbours
+    for i in range(pos.shape[0]): # plot for all particles
+        if central_box:
+            ax.plot(pos[i,0]  , pos[i,1]  , ".", color="black") # central box
+        else: 
+            ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]  , "r.") # central box
+
+        #pos = pos[np.where(pos > -L/4)]
+        #pos = pos[np.where(pos < 5*L/4)]
+
+        ax.plot(pos[i,0]+L, pos[i,1]  , pos[i,2]  , "r.") # permutations + _ _
+        ax.plot(pos[i,0]  , pos[i,1]+L, pos[i,2]  , "r.")
+        ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]+L, "r.")
+
+        ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]  , "r.") # permutations + + _
+        ax.plot(pos[i,0]  , pos[i,1]+L, pos[i,2]+L, "r.")
+        ax.plot(pos[i,0]+L, pos[i,1]  , pos[i,2]+L, "r.")
+
+        ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]+L, "r.") # permutations + + + 
+
+        ax.plot(pos[i,0]-L, pos[i,1]  , pos[i,2]  , "r.") # permutations - _ _
+        ax.plot(pos[i,0]  , pos[i,1]-L, pos[i,2]  , "r.")
+        ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]-L, "r.")
+
+        ax.plot(pos[i,0]-L, pos[i,1]-L, pos[i,2]  , "r.") # permutations - - _
+        ax.plot(pos[i,0]-L, pos[i,1]  , pos[i,2]-L, "r.")
+        ax.plot(pos[i,0]  , pos[i,1]-L, pos[i,2]-L, "r.")
+
+        ax.plot(pos[i,0]-L, pos[i,1]-L, pos[i,2]-L, "r.") # permutatinos - - - 
+             
+        ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]  , "r.") # permutations - + _
+        ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]  , "r.")
+        ax.plot(pos[i,0]-L, pos[i,1]  , pos[i,2]+L, "r.")
+        ax.plot(pos[i,0]+L, pos[i,1]  , pos[i,2]-L, "r.")
+        ax.plot(pos[i,0]  , pos[i,1]+L, pos[i,2]-L, "r.")
+        ax.plot(pos[i,0]  , pos[i,1]-L, pos[i,2]+L, "r.")
+
+        ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]-L, "r.") # permutations + - -
+        ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]-L, "r.")
+        ax.plot(pos[i,0]-L, pos[i,1]-L, pos[i,2]+L, "r.")
+
+        ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]+L, "r.") # permutations + + -
+        ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]+L, "r.")
+        ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]-L, "r.")
+
+    if central_box: # plot square for central box
+        ax.plot([0,L,L,0,0],[0,0,L,L,0],[0,0,0,0,0], "g-")
+        ax.plot([0,0,L,L],[0,0,0,0],[0,L,L,0],"g-")
+        ax.plot([0,0,0],[0,L,L],[L,L,0],"g-")
+        ax.plot([0,L,L],[L,L,L],[L,L,0],"g-") 
+        ax.plot([L,L],[0,L],[L,L],"g-")  
+
+    if relative_pos:
+        rel_pos, rel_dist = sim.atomic_distances(pos, L)
+        for i in range(pos.shape[0]):
+            for j in range(pos.shape[0]):
+                    if i == j: continue
+                    ax.plot([pos[i,0], pos[i,0]+rel_pos[j,i,0]], [pos[i,1], pos[i,1]+rel_pos[j,i,1]],[pos[i,2],pos[i,2]+rel_pos[j,i,2]], "b--")
+
+    
+
+    
+
+    ax.set_xlabel("$x/\sigma$")
+    ax.set_ylabel("$y/\sigma$")
+    ax.set_zlabel("($z/\sigma$)")
+
+    # set axis' ticks inside figure
+    ax.tick_params(axis="x",direction="in")
+    ax.tick_params(axis="y",direction="in")
+    ax.tick_params(axis="z",direction="in")
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.zaxis.set_ticks_position('both')
+
+    return ax
+
 
 
 def E_vs_t(data_file, box_dim, kinetic_potential=False):
