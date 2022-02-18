@@ -240,9 +240,11 @@ def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=Fa
             ax.plot(pos[i,0]-L, pos[i,1]+L, pos[i,2]+L, "r.") # permutations + + -
             ax.plot(pos[i,0]+L, pos[i,1]-L, pos[i,2]+L, "r.")
             ax.plot(pos[i,0]+L, pos[i,1]+L, pos[i,2]-L, "r.")
+
             ax.set_xlim(-L, 2*L)
             ax.set_ylim(-L, 2*L)
             ax.set_zlim(-L, 2*L)
+
     ax.set_xlim(0, L)
     ax.set_ylim(0, L)
     ax.set_zlim(0, L)
@@ -261,9 +263,6 @@ def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=Fa
                     ax.plot([pos[i,0], pos[i,0]+rel_pos[j,i,0]], [pos[i,1], pos[i,1]+rel_pos[j,i,1]],[pos[i,2],pos[i,2]+rel_pos[j,i,2]], "b--")
 
     
-
-    
-
     ax.set_xlabel("$x/\sigma$")
     ax.set_ylabel("$y/\sigma$")
     ax.set_zlabel("($z/\sigma$)")
@@ -277,7 +276,6 @@ def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=Fa
     ax.zaxis.set_ticks_position('both')
 
     return ax
-
 
 
 def E_vs_t(data_file, box_dim, kinetic_potential=False):
@@ -366,6 +364,51 @@ def E_conservation(data_file, box_dim):
 
     ax.set_xlabel("dimensionless time")
     ax.set_ylabel("relative energy difference")
+
+    # set axis' ticks inside figure
+    ax.tick_params(axis="y",direction="in")
+    ax.tick_params(axis="x",direction="in")
+    ax.yaxis.set_ticks_position('both')
+    ax.xaxis.set_ticks_position('both')
+
+    plt.show()
+    plt.clf()
+
+    return
+
+
+def reldist_vs_t(data_file, i, j, box_dim):
+    """
+    Plots relative distance between particles `i` and `j` as a function of time
+
+    Parameters
+    ----------
+    data_file : str
+        Name of the CSV file in which the data is stored
+    i : int
+        Number of the particle that constitutes the pair
+    j : int
+        Number of the particle that constitutes the pair
+    box_dim : float
+        Dimensions of the simulation box
+
+    Returns
+    -------
+    None
+    """
+
+    time, pos, vel = sim.load_data(data_file)
+
+    rel_dist = []
+    for k, t in enumerate(time):
+        rel_dist += [np.linalg.norm(pos[k, i, :] - pos[k, j, :])] 
+
+    fig = plt.figure(1)
+    ax = fig.add_subplot(111)
+    ax.plot(time, rel_dist, "-", color="black")
+
+    ax.set_xlabel("dimensionless time")
+    ax.set_ylabel("relative_distance(i={},j={})/$\sigma$".format(i,j))
 
     # set axis' ticks inside figure
     ax.tick_params(axis="y",direction="in")
