@@ -401,7 +401,11 @@ def reldist_vs_t(data_file, i, j, box_dim):
 
     rel_dist = []
     for k, t in enumerate(time):
-        rel_dist += [np.linalg.norm(pos[k, i, :] - pos[k, j, :])] 
+        rel_pos = pos[k, i, :] - pos[k, j, :]
+        # check if using the minimum distance between pair due to BC
+        wrong_pair = np.where(np.abs(rel_pos) > box_dim/2)
+        rel_pos[wrong_pair] = rel_pos[wrong_pair] - np.sign(rel_pos[wrong_pair])*box_dim
+        rel_dist += [np.linalg.norm(rel_pos)] 
 
     fig = plt.figure(1)
     ax = fig.add_subplot(111)
@@ -415,6 +419,8 @@ def reldist_vs_t(data_file, i, j, box_dim):
     ax.tick_params(axis="x",direction="in")
     ax.yaxis.set_ticks_position('both')
     ax.xaxis.set_ticks_position('both')
+
+    fig.tight_layout()
 
     plt.show()
     plt.clf()

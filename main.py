@@ -4,12 +4,12 @@ import simulate as sim
 import plotting as plot
 
 # Input parameters
-N = 20 # number of particles
+N = 2 # number of particles
 d = 3 # dimensionality of the box
 L = 3 * N**(1/d) # box length in units of sigma
-T = 20 # temperature in SI
-num_tsteps = 3000 # number of steps of the simulation
-run_time = 3 # run time of the simulation in units of sqrt(mass*sigma^2/epsilon)
+T = 50 # temperature in SI
+num_tsteps = 1000 # number of steps of the simulation
+run_time = 1 # run time of the simulation in units of sqrt(mass*sigma^2/epsilon)
 algorithm_method = "verlet" # method for numerical time evolution (options: "verlet" or "euler")
 
 # Velocity and Position initialization (uniformly random)
