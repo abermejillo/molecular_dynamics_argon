@@ -406,9 +406,9 @@ def load_data(file_name):
     time : np.ndarray(M)
         Time steps of the simulation
     pos : np.ndarray(M,N,d)
-        Positions of the particles for all the time steps fo the simulation
+        Positions of the particles for all the time steps of the simulation
     vel: np.ndarray(M,N,d)
-        Velocities of particles for all the time steps fo the simulation
+        Velocities of particles for all the time steps of the simulation
     """
 
     # load header information

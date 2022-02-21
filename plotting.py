@@ -426,3 +426,102 @@ def reldist_vs_t(data_file, i, j, box_dim):
     plt.clf()
 
     return
+
+def GIF_potential_energy(gif_name, data_file, num_frames, i , j, box_dim):
+    """
+    Generates frames for the time evolution of the potential energy 
+    of a pair of particles in a E_vs_t graph and a Lennard-Jones potential graph.
+    The frames are saved in "LJ_gif/", while the GIF is saved in the main directory.
+
+    Parameters
+    ----------
+    gif_name : str
+        Name of the GIF which is created.
+    data_file : str
+        Name of the CSV file in which the data is stored
+    num_frames : int
+        Number of total frames generated (max is 99999)
+    i : int
+        Number of the particle that constitutes the pair
+    j : int
+        Number of the particle that constitutes the pair
+    box_dim : float
+        Dimensions of the simulation box
+
+    Returns
+    -------
+    None
+    """
+
+    if "LJ-gif" not in os.listdir():
+        os.mkdir("LJ-gif")
+
+    time, pos, vel = sim.load_data(data_file)
+
+    num_tsteps = len(time)
+    save_frame = [int(i*(num_tsteps-1)/(num_frames-1)) for i in range(num_frames-1)] + [int(num_tsteps)-1] # timesteps in which to save frames
+    print("PLOTTING AND SAVING FRAMES... ({}/{})\r".format(1, num_frames), end="")
+
+    # Extract energies and relative distances at each timestep
+    E_total = []
+    E_kinetic = []
+    E_potential = []
+    rel_dist = []
+
+    for k, t in enumerate(time):
+        rel_pos = pos[k, i, :] - pos[k, j, :]
+        wrong_pair = np.where(np.abs(rel_pos) > box_dim/2)
+        rel_pos[wrong_pair] = rel_pos[wrong_pair] - np.sign(rel_pos[wrong_pair])*box_dim
+        rel_dist += [np.linalg.norm(rel_pos)]
+
+        E_kinetic += [sim.kinetic_energy(vel[k,i])+sim.kinetic_energy(vel[k,j])]
+        E_potential += [4*(1/rel_dist[-1]**12-1/rel_dist[-1]**6)]
+        E_total += [E_kinetic[-1] + E_potential[-1]]
+
+    # Generate data to plat the Lennard-Jones potential from rmin to rmax
+    rmin = np.min(rel_dist)
+    rmax = np.max(rel_dist)
+    N = 100
+    rel_dist_LJ = np.linspace(rmin, rmax, N)
+    LJ_potential = 4*(1/rel_dist_LJ**12-1/rel_dist_LJ**6)
+
+    # Create figures at each timestep specified by save_frame
+    time2 = [time[i] for i in save_frame]
+    E_kinetic2 = [E_kinetic[i] for i in save_frame]
+    E_potential2 = [E_potential[i] for i in save_frame]
+    E_total2 = [E_total[i] for i in save_frame]
+
+    for k, t in enumerate(save_frame):
+        print("PLOTTING AND SAVING FRAMES... ({}/{})\r".format(k+1, num_frames), end="")
+
+        fig, axis = plt.subplots(2)
+
+        axis[0].scatter(time[t], E_kinetic[t])
+        axis[0].scatter(time[t], E_potential[t])
+        axis[0].scatter(time[t], E_total[t])
+        axis[0].plot(time2,E_kinetic2)
+        axis[0].plot(time2,E_potential2)
+        axis[0].plot(time2,E_total2)
+        axis[0].set_xlabel("dimensionless time")
+        axis[0].set_ylabel("dimensionless energy")
+        axis[1].scatter(rel_dist[t],E_potential[t])
+        axis[1].plot(rel_dist_LJ,LJ_potential,"-",color="green")
+        axis[1].set_xlabel("dimensionless relative distance")
+        axis[1].set_ylabel("dimensionless potential energy")
+
+        axis[0].set_title("dimensionless t={:0.3f}".format(time[t]))
+        fig.tight_layout()
+        fig.savefig("LJ-gif/pair_pot_3D{:05d}.png".format(k))
+        plt.cla() # clear axis
+    
+    plt.clf()
+    print("\n", end="")
+
+    print("BUILDING GIF... ")
+    with imageio.get_writer(gif_name, mode='I', duration=3/num_frames) as writer: # 30 fps
+        for filename in ["LJ-gif/pair_pot_3D{:05d}.png".format(f) for f in range(len(save_frame))]:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+    print("DONE")
+    
+    return
