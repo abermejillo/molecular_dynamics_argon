@@ -27,7 +27,7 @@ useful.
 
 ## Week 1
 
-### **Bullet List**
+### Bullet List
 
 (1) Write `main.py` with some basic working code. This includes:
    - Write the numerical constants for the simulation.
@@ -39,7 +39,7 @@ useful.
 
 (2) Once code works, divide it in function blocks (and use `skeleton.py` as template for the functions)
 
-### **Progress**
+### Progress
 
 All of the milestones set for this week have been completed. First we wrote all the code in `main.py`. It initialized the particles and run the time evolution of the system [link to particular commit](https://gitlab.kwant-project.org/computational_physics/projects/Project-1_abermejillo_dbedialaunetar_mserraperalta/-/commit/e25d039188a0e8e7fceb45092361b36e0a65c9bd). This completes most of block (1) of the bullet list.
 
@@ -73,7 +73,7 @@ In conclusion, all milestones have been more than fulfilled. We have a code that
 
 ## Week 2
 
-### **Bullet List**
+### Bullet List
 
 1. Convert to dimensionless units (including deriving the expression of the kinetic energy and changing the scripts) @abermejillo
 2. Implement the minimal image convention (done by @mserraperalta in Week 1)
@@ -128,6 +128,17 @@ All in all, it is clear that we have achieved all milestones and obtained all re
 
 
 ## Week 3
+
+### Bulletlist
+
+1. Improve the _FCC lattice_ function to omit a 'for' loop and change it so that the whole box is filled @mserraperalta
+2. _Energy conservation_ comparison of the Euler and Velociy-Verlet algorithms (plots) @dbedialaunetar
+3. Implement _Maxwell velocity distribution_ for the intialization @abermejillo
+4. Implement _rescaling_ of the velocities @mserraperalta  
+5. Investigate if an _adaptive step verlet algorithm_ can be implemented (and do so if it is) @abermejillo
+6. Implement a couple of _observables_ @dbedialaunetar
+
+
 (due 28 February 2022, 23:59)
 
 
