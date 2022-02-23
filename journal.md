@@ -53,18 +53,18 @@ Some of the results obtained with the actual version of the code are shown herea
 
 1. GIF showing the dynamics of the system:
 
-![Sample Video](results/dynamics_1.gif)
+![Sample Video](results/W1_dynamics_1.gif)
 
 2. Energy conservation:
 
-![alt text](results/energy_1.png "Total Energy (t)")
+![alt text](results/W1_energy_1.png "Total Energy (t)")
 
 We can see how the particles evolve smoothly and interact with eachother (noticeable when they get close to eachother). If we look at the energy we notice an apparently big step that would suggest that the energy is not conserved. However, we can observe that the step is 5 orders lower that that of the actual energy. Nonetheless, when using a higher number of particles ($`N \approx 20`$) there are problems with energy conservation if the box is not very large. We expect those to be solved upon normalization and using the velocity-Verlet algorithm. 
 
 3. Other checks
 
-- Take minimum distance between particles when using periodic BC, see [this gif](results/closest_relative_distance.gif)
-- Attractive force when particles are further than $`\sigma`$, see [this gif](results/attractive_force.gif)
+- Take minimum distance between particles when using periodic BC, see [this gif](results/W1_closest_relative_distance.gif)
+- Attractive force when particles are further than $`\sigma`$, see [this gif](results/W1_attractive_force.gif)
 
 In conclusion, all milestones have been more than fulfilled. We have a code that works, it is quite well structured and the few tests that have been done give good results given the stage of the project.  
 
@@ -101,25 +101,25 @@ We now show and discuss the results for the simulation of two particles in 3D.
 
 First, we have a GIF that shows how the two particles move inside a box with periodic boundary conditions.
 
-![Sample Video](results/2_atoms_close_to_the_boundary.gif)
+![Sample Video](results/W2_2_atoms_close_to_the_boundary.gif)
 
 The particles were initialized close to each other. At times $`t=0.9`$ and $`t=3.8`$ we see how one particle crosses a side of the box and appears on the opposite side, which shows that the periodic boundary conditions work.
 
 We know plot the relative distance between the two particles over time.
 
-![alt text](results/rel_dist_2_particles.png)
+![alt text](results/W2_rel_dist_2_particles.png)
 
 At times $`t\approx 1.8`$ and $`t\approx 3.5`$ we see that the relative distance takes a minimum, which represent two scattering events due to the repulsion in the Lennard-Jones potential.
 
 Finally, we plot the total, kinetic and potential energies with respect to time.
 
-![alt text](results/KE_PE_TE_2_atoms_close_to_the_boundary.png)
+![alt text](results/W2_KE_PE_TE_2_atoms_close_to_the_boundary.png)
 
 The most important conclusion from this graph is that the total energy is, indeed, conserved. We also see that the kinetic and potential energies have opposite extremal points, i.e, when there is a minimum in kinetic energy, there is a maximum in potential energy, and vice versa. Relating the relative distance graph with this one, we see that the wide minima in kinetic energy coincide with the instants where the two particles are furthest apart.
 
 In order to better understand all the peaks that we see in energy, we have created the following GIF that relates each point in time with a point in the Lennard-Jones potential.
 
-![Sample Video](results/GIF_Lennard-Jones.gif)
+![Sample Video](results/W2_GIF_Lennard-Jones.gif)
 
 All in all, it is clear that we have achieved all milestones and obtained all results from Week 2. Due to the fact that our simulations show repulsion and attraction between particles in addition to scattering events, it seems like the Lennard-Jones potential is being correctly simulated; and since the total energy is conserved, we can infer no mistakes are being made in the coding.
 
