@@ -15,7 +15,7 @@ Clone this repo and run `pip install -r requirements.txt` to install its depende
 Open `main.py` and specify the input parameters:
 - `N` : number of particles, always in the shape 4*(k**3)
 - `d` : dimensionality of the box
-- `T` : temperature in units of $`k_{B}T/\epsilon`$
+- `T` : temperature in units of $`k_{B}/\epsilon`$
 - `num_tsteps` : number of time steps of the simulation
 - `run_time` : run time of the simulation in units of $`(m \sigma^2 / \epsilon )^{1/2}`$
 - `algorithm_method` : algorithm to calculate the temporal evolution (`verlet` or `euler`)
@@ -23,33 +23,33 @@ Open `main.py` and specify the input parameters:
 
 
 Run `main.py` to:
-1. Execute the simulation and store the results in `output.csv`. 
+1. Execute the simulation and store the results in `output.csv`:
 
-    For that use:  sim.simulate(init_pos, init_vel, num_tsteps, run_time/num_tsteps, L, "output.csv", method=algorithm_method)
+    `sim.simulate(init_pos, init_vel, num_tsteps, run_time/num_tsteps, L, "output.csv", method=algorithm_method)`
 
-2. Create a 3D gif of the evolution.  
+2. Create a 3D gif of the evolution:  
 
-    For that use:  plot.GIF_3D("movie.gif", "output.csv", 300, L)
+    `plot.GIF_3D("movie.gif", "output.csv", 300, L)`
 
-3. Plot the total energy as a function of time (as well as kinetic and potential energies separately). 
+3. Plot the total energy as a function of time (as well as kinetic and potential energies separately):
 
-    For that use:  plot.E_vs_t("output.csv", L, kinetic_potential=True)
+    `plot.E_vs_t("output.csv", L, kinetic_potential=True)`
 
-4. Plot the relative energy deviation as a function of time. 
+4. Plot the relative energy deviation as a function of time:
 
-    For that use:  plot.E_conservation("output.csv", L)
+    `plot.E_conservation("output.csv", L)`
 
-5. Plot the relative distance between two particles as a function of time. 
+5. Plot the relative distance between two particles as a function of time:
 
-    For that use:  plot.reldist_vs_t("output.csv", 0, 1, L)
+    `plot.reldist_vs_t("output.csv", 0, 1, L)`
 
 6. Create a GIF that shows how the energy is translated from kinetic to potential and viceversa (only significant with two particles). 
 
-    For that use:  plot.GIF_potential_energy("movie2.gif", "output.csv", 300, 0 , 1, L)
+    `plot.GIF_potential_energy("movie2.gif", "output.csv", 300, 0 , 1, L)`
 
 7. Plot the probability density function for the initial velocities (Maxwell distribution). 
 
-    For that use:  plot.plot_maxwell_distribution(init_vel,T)
+    `plot.plot_maxwell_distribution(init_vel,T)`
 
 
 
