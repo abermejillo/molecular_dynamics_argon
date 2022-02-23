@@ -584,3 +584,31 @@ def merge_GIF_3D(gif_name, data_file1, data_file2, num_frames, box_dim):
     print("DONE")
 
     return
+
+def Maxwell_distribution(init_vel, temp):
+     """
+    Generates a plot that shows a probability density of a a particle having a given velocity. 
+    A gaussian distribution with standard deviation \sqrt(temperature) is shown on top of it.
+
+    Parameters
+    ----------
+    init_vel : np.array(N,d)
+        Initial distribution of velocities
+    temp : float
+        temperature of the system in units of KB/epsilon
+    
+    Returns
+    -------
+    None
+    """
+
+    plt.hist(init_vel[:,0],bins=20,density=True,label='Hist of velocities') 
+    sigma = np.sqrt(temp)
+    x = np.linspace(-3*sigma,3*sigma, 100)
+    plt.plot(x, stats.norm.pdf(x, 0, sigma),label='Gauss$(\mu=0, \sigma=\sqrt{T})$')
+    plt.xlabel("Velocity (dimensionless)")
+    plt.ylabel("Density of probability")
+    plt.legend(loc='upper left')
+    plt.show()
+    plt.clf()
+    return 
