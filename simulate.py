@@ -221,7 +221,7 @@ def lj_force(rel_pos, rel_dist):
 
 def fcc_lattice(num_atoms, lattice_const):
     """
-    Initializes a system of atoms on an fcc lattice.
+    Initializes a system of atoms on an fcc lattice for periodic BC.
 
     Parameters
     ----------
@@ -235,7 +235,7 @@ def fcc_lattice(num_atoms, lattice_const):
     pos : np.ndarray(num_atoms,3)
         Array of particle coordinates
     """
-    b = int((num_atoms/4)**(1/3)) + 1 # Minimum number of nodes that the lattice will have in each direction
+    b = int(((num_atoms-1)/4)**(1/3)) + 1 # Minimum number of nodes that the lattice will have in each direction | (N-1) to solve when N = 4*b^3
 
     # create position vectors for all cells
     xij = np.arange(0, b)
@@ -244,14 +244,20 @@ def fcc_lattice(num_atoms, lattice_const):
     # fill cells with atoms in fcc positions
     director_vectors = np.array([[0,0,0], [1,1,0], [1,0,1], [0,1,1]])*1/2
 
-    pos = np.empty(shape=(0,3))
-    for comb_v in combinations_vectors:
-        pos = np.append(pos, (director_vectors + comb_v)*lattice_const, axis=0)
+    pos = (director_vectors[0] + combinations_vectors)*lattice_const
+    pos = np.append(pos, (director_vectors[1] + combinations_vectors)*lattice_const, axis=0)
+    pos = np.append(pos, (director_vectors[2] + combinations_vectors)*lattice_const, axis=0)
+    pos = np.append(pos, (director_vectors[3] + combinations_vectors)*lattice_const, axis=0)
+
+    pos = pos + lattice_const/4 # to put FCC away from the BC
 
     # delete extra atoms
     pos = pos[:num_atoms]
 
-    return pos
+    # box dimension
+    L = b*lattice_const
+
+    return pos, L
 
 
 def kinetic_energy(vel):
