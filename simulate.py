@@ -335,6 +335,34 @@ def total_energy(pos, vel, box_dim):
     return kin_energy + pot_energy
 
 
+def random_gaussian_vector(num, sigma):
+    """
+    Returns a vector of length num with a Gaussian probability of zero mean and standard deviation sigma.
+
+    Parameters
+    ----------
+    num : int
+        Number of items in the vector
+    sigma : float
+        Standard deviation of the gaussian distribution
+
+    Returns
+    -------
+    gaussian_dist : np.array(num,1)
+        Array of gaussian distributed numbers with standard deviation sigma
+    """
+
+    u1 = np.random.rand(int(np.ceil(num/2)))
+    u2 = np.pi*2*np.random.rand(int(np.ceil(num/2)))
+    R = np.sqrt(-2*np.log(u1))
+    x = R*np.cos(u2)
+    y = R*np.sin(u2)
+    gaussian_dist = sigma*np.concatenate((x,y))[0:num]
+    gaussian_dist = (gaussian_dist - np.mean(gaussian_dist))/np.std(gaussian_dist)
+
+    return gaussian_dist
+
+
 def init_velocity(num_atoms, temp):
     """
     Initializes the system with Gaussian distributed velocities.
@@ -353,8 +381,10 @@ def init_velocity(num_atoms, temp):
     vel_vec : np.ndarray(N,d)
         Array of particle velocities
     """
-
-    return
+    vel_vec = np.array([random_gaussian_vector(num_atoms, np.sqrt(temp)),random_gaussian_vector(num_atoms, np.sqrt(temp)),random_gaussian_vector(num_atoms, np.sqrt(temp))])
+    vel_vec = vel_vec.T
+    
+    return vel_vec
 
 
 def save_data(file_class, time, pos, vel):
