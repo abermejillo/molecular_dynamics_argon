@@ -8,7 +8,7 @@ EPSILON = 119.8*KB # parameter of LJ potential for Argon atoms in SI
 MASS = 6.6335209E-26 # Argon particle mass in SI
 
 
-def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, method="verlet"):
+def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, T, file_name, method="verlet", resc_thr=[1E-1, 0.2]):
     """
     Molecular dynamics simulation using the Euler algorithm
     to integrate the equations of motion. 
@@ -28,6 +28,11 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, metho
         Duration of a single simulation step
     box_dim : float
         Dimensions of the simulation box
+    T : float
+        Temperature of the system
+    resc_thr : [float, float]
+        First argument is the error for the temperature of the system (to do rescalings)
+        Second argument is the minimum time between reescalings (to let the system equilibrate)
     file_name : str
         Name of the CSV file to store the simulation data
     method : "verlet" or "euler"
@@ -42,14 +47,20 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, metho
     f = open(file_name, "w")
     f.write("N={} d={}\n".format(pos.shape[0], pos.shape[1])) # header
     save_data(f, 0, pos, vel) # save initial position
+    rescaling = [[0,0]] # [temperature of the system, time of the reescaling]
     
     for k in np.arange(1, num_tsteps+1):
-        print("\rtime step : {:7d}/{}".format(k, num_tsteps), end="")
+        print("\rtime step : {:7d}/{} | temperature={:0.5f}/{:0.5f}".format(k, num_tsteps, rescaling[-1][0], T), end="")
 
         if method == "verlet":
             pos, vel = simulate_step_verlet(pos, vel, timestep, box_dim)
         if method == "euler":
             pos, vel = simulate_step_euler(pos, vel, timestep, box_dim)
+
+        # rescaling of vel for temperature equilibrium
+        if ((k*timestep - rescaling[-1][1]) > resc_thr[1]) and (np.abs(temperature(vel) - T) > resc_thr[0]):
+            vel, T_prev = rescale_velocity(vel, T)
+            rescaling += [[T_prev, k*timestep]]
 
         save_data(f, k*timestep, pos, vel)
 
@@ -357,8 +368,8 @@ def random_gaussian_vector(num, sigma):
     R = np.sqrt(-2*np.log(u1))
     x = R*np.cos(u2)
     y = R*np.sin(u2)
-    gaussian_dist = sigma*np.concatenate((x,y))[0:num]
-    gaussian_dist = (gaussian_dist - np.mean(gaussian_dist))/np.std(gaussian_dist)
+    gaussian_dist = np.concatenate((x,y))[0:num]
+    gaussian_dist = sigma*(gaussian_dist - np.mean(gaussian_dist))/np.std(gaussian_dist)
 
     return gaussian_dist
 
@@ -378,13 +389,66 @@ def init_velocity(num_atoms, temp):
 
     Returns
     -------
-    vel_vec : np.ndarray(N,d)
+    vel : np.ndarray(N,d)
         Array of particle velocities
     """
-    vel_vec = np.array([random_gaussian_vector(num_atoms, np.sqrt(temp)),random_gaussian_vector(num_atoms, np.sqrt(temp)),random_gaussian_vector(num_atoms, np.sqrt(temp))])
-    vel_vec = vel_vec.T
+
+    vel = np.array([random_gaussian_vector(num_atoms, np.sqrt(temp)),random_gaussian_vector(num_atoms, np.sqrt(temp)),random_gaussian_vector(num_atoms, np.sqrt(temp))])
+    vel = vel.T
     
-    return vel_vec
+    return vel
+
+
+def temperature(vel):
+    """
+    Returns the temperature of the system given its velocities
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    vel : np.ndarray(N,d)
+        Array of particle velocities
+
+    Returns
+    -------
+    T : float
+        (unitless) desired temperature of the system
+    """
+
+    N = vel.shape[0]
+    T = (vel**2).sum()/(3*(N-1))
+
+    return T
+
+def rescale_velocity(vel, T):
+    """
+    Rescales velocities to match the desired temperature
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    vel : np.ndarray(N,d)
+        Array of particle velocities
+    T : float
+        (unitless) desired temperature of the system
+
+    Returns
+    -------
+    resc_vel : np.ndarray(N,d)
+        Rescaled array of particle velocities
+    T_previous : float
+        (unitless) actual temperature of the system before the reescaling
+    """
+
+    N = vel.shape[0]
+
+    T_previous = temperature(vel)
+    resc_factor = np.sqrt(T/T_previous)
+    resc_vel = resc_factor*vel
+
+    return resc_vel, T_previous
 
 
 def save_data(file_class, time, pos, vel):
