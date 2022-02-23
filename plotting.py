@@ -525,3 +525,62 @@ def GIF_potential_energy(gif_name, data_file, num_frames, i , j, box_dim):
     print("DONE")
     
     return
+
+def merge_GIF_3D(gif_name, data_file1, data_file2, num_frames, box_dim):
+    """
+    Generates frames for the time evolution of particles in 2D, merging
+    two different simulations and stores them in "tmp-plot" folder as 
+    "pair_int_2D{:05d}.png". 
+
+    Parameters
+    ----------
+    gif_name : str
+        Name of the GIF file to be generated
+    data_file1 : str
+        Name of the CSV file in which the data is stored
+    data_file1 : str
+        Name of the CSV file in which the data is stored
+    num_frames : int
+        Number of total frames generated (max is 99999)
+    box_dim : float
+        Dimensions of the simulation box
+
+    Returns
+    -------
+    None
+    """
+
+    time, pos1, vel1 = sim.load_data(data_file1)
+    time, pos2, vel2 = sim.load_data(data_file2)
+    num_tsteps = len(time) 
+    save_frame = [int(i*(num_tsteps-1)/(num_frames-1)) for i in range(num_frames-1)] + [int(num_tsteps)-1] # timesteps in which to save frames
+
+    if "tmp-plot" not in os.listdir():
+        os.mkdir("tmp-plot")
+
+    # Create figure and save initial position
+    print("PLOTTING AND SAVING FRAMES... ({}/{})\r".format(1, num_frames), end="")
+    fig = plt.figure(1)
+    ax = fig.add_subplot(111, projection='3d')
+
+    for f, t in enumerate(save_frame):
+        print("PLOTTING AND SAVING FRAMES... ({}/{})\r".format(f+1, num_frames), end="")
+
+        ax = plot_pos_3D(ax, pos1[t], box_dim, color="blue")
+        ax = plot_pos_3D(ax, pos2[t], box_dim, color="red")
+        ax.set_title("dimensionless t={:0.3f}".format(time[t]))
+        fig.tight_layout()
+        fig.savefig("tmp-plot/pair_int_3D{:05d}.png".format(f))
+        plt.cla() # clear axis
+
+    plt.clf()
+    print("\n", end="")
+
+    print("BUILDING GIF... ")
+    with imageio.get_writer(gif_name, mode='I', duration=3/num_frames) as writer: # 30 fps
+        for filename in ["tmp-plot/pair_int_3D{:05d}.png".format(f) for f in range(len(save_frame))]:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+    print("DONE")
+
+    return
