@@ -429,3 +429,41 @@ def load_data(file_name):
     vel = vel.reshape(M,N,d)
 
     return time, pos, vel
+
+
+def load_initial_data(file_name):
+    """
+    Loads initial data from CSV file that has the same structure
+    as specified in 'save_data' function. 
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+
+    Returns
+    -------
+    init_pos : np.ndarray(N,d)
+        Positions of the particles for all the time steps of the simulation
+    init_vel: np.ndarray(N,d)
+        Velocities of particles for all the time steps of the simulation
+    """
+
+    # load header information
+    f = open(file_name, "r")
+    header = f.readline()
+    initial_data = f.readline()
+    f.close()
+    N, d = header.split(" ")[:2]
+    N, d = int(N.replace("N=", "")), int(d.replace("d=", ""))
+
+    # load data
+    data = np.array([float(i) for i in initial_data.split(",")])
+    init_pos = data[1:d*N+1]
+    init_pos = init_pos.reshape(N,d)
+    init_vel = data[d*N+1:2*d*N+1]
+    init_vel = init_vel.reshape(N,d)
+
+    return init_pos, init_vel
