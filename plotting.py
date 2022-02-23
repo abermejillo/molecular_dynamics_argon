@@ -586,7 +586,7 @@ def merge_GIF_3D(gif_name, data_file1, data_file2, num_frames, box_dim):
     return
 
 def plot_maxwell_distribution(init_vel, temp):
-     """
+    """
     Generates a plot that shows a probability density of a a particle having a given velocity. 
     A gaussian distribution with standard deviation \sqrt(temperature) is shown on top of it.
 
