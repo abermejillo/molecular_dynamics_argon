@@ -13,23 +13,47 @@ Clone this repo and run `pip install -r requirements.txt` to install its depende
 ## Usage
 
 Open `main.py` and specify the input parameters:
-- `N` : number of particles
-- `L` : box length in units of $`\sigma`$
+- `N` : number of particles, always in the shape 4*(k**3)
 - `d` : dimensionality of the box
-- `T` : temperature in SI \[K\]
+- `T` : temperature in units of $`k_{B}T/\epsilon`$
 - `num_tsteps` : number of time steps of the simulation
 - `run_time` : run time of the simulation in units of $`(m \sigma^2 / \epsilon )^{1/2}`$
 - `algorithm_method` : algorithm to calculate the temporal evolution (`verlet` or `euler`)
 
+
+
 Run `main.py` to:
-1. execture the simulation and store the results in `output.csv`
-2. create a gif of the evolution
-3. plot the total energy as a function of time (as well as kinetic and potential energies separately)
-4. relative energy deviation as a function of time
-5. relative distance between two particles as a funciton of time 
+1. Execute the simulation and store the results in `output.csv`. 
+
+    For that use:  sim.simulate(init_pos, init_vel, num_tsteps, run_time/num_tsteps, L, "output.csv", method=algorithm_method)
+
+2. Create a 3D gif of the evolution.  
+
+    For that use:  plot.GIF_3D("movie.gif", "output.csv", 300, L)
+
+3. Plot the total energy as a function of time (as well as kinetic and potential energies separately). 
+
+    For that use:  plot.E_vs_t("output.csv", L, kinetic_potential=True)
+
+4. Plot the relative energy deviation as a function of time. 
+
+    For that use:  plot.E_conservation("output.csv", L)
+
+5. Plot the relative distance between two particles as a function of time. 
+
+    For that use:  plot.reldist_vs_t("output.csv", 0, 1, L)
+
+6. Create a GIF that shows how the energy is translated from kinetic to potential and viceversa (only significant with two particles). 
+
+    For that use:  plot.GIF_potential_energy("movie2.gif", "output.csv", 300, 0 , 1, L)
+
+7. Plot the probability density function for the initial velocities (Maxwell distribution). 
+
+    For that use:  plot.plot_maxwell_distribution(init_vel,T)
+
 
 
 ## Authors 
-- Álvaro Bermejillo
-- Dani Bedialauneta
+- Álvaro Bermejillo Seco
+- Dani Bedialauneta Rodríguez
 - Marc Serra Peralta
