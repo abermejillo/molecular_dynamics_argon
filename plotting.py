@@ -202,7 +202,7 @@ def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=Fa
     # plot central box and its eight neighbours
     for i in range(pos.shape[0]): # plot for all particles
         if central_box:
-            ax.plot(pos[i,0]  , pos[i,1]  , ".", color="black") # central box
+            ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]  , ".", color="black") # central box
         else: 
             ax.plot(pos[i,0]  , pos[i,1]  , pos[i,2]  , "r.") # central box
         if outer_boxes:
