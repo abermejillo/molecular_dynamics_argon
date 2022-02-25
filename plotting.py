@@ -278,7 +278,7 @@ def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=Fa
     return ax
 
 
-def E_vs_t(data_file, box_dim, kinetic_potential=False):
+def E_vs_t(data_file, box_dim, kinetic=False, potential=False, total=True):
     """
     Plots energy as a function of time
 
@@ -302,17 +302,22 @@ def E_vs_t(data_file, box_dim, kinetic_potential=False):
     E_kinetic = []
     E_potential = []
     for k, t in enumerate(time):
-        E_kinetic += [sim.kinetic_energy(vel[k])] 
-        E_potential += [sim.potential_energy(pos[k], box_dim)]
-        E_total += [E_kinetic[-1] + E_potential[-1]] 
+        if kinetic or total:
+            E_kinetic += [sim.kinetic_energy(vel[k])] 
+        if potential or total:
+            E_potential += [sim.potential_energy(pos[k], box_dim)]
+        if total:
+            E_total += [E_kinetic[-1] + E_potential[-1]] 
 
     fig = plt.figure(1)
     ax = fig.add_subplot(111)
-    ax.plot(time, E_total, "-", label="total E", color="black")
-    if kinetic_potential:
+    if total:
+        ax.plot(time, E_total, "-", label="total E", color="black")
+    if kinetic:
         ax.plot(time, E_kinetic, "-", label="kinetic E", color="red")
+    if potential:
         ax.plot(time, E_potential, "-", label="potential E", color="blue")
-        ax.legend(loc="best")
+    ax.legend(loc="best")
 
     ax.set_xlim(0, np.max(time))
 

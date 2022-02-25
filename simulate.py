@@ -8,7 +8,7 @@ EPSILON = 119.8*KB # parameter of LJ potential for Argon atoms in SI
 MASS = 6.6335209E-26 # Argon particle mass in SI
 
 
-def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, T, file_name, method="verlet", resc_thr=[1E-1, 0.2]):
+def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, T, file_name, method="verlet", resc_thr=[1E-2, 0.1]):
     """
     Molecular dynamics simulation using the Euler algorithm
     to integrate the equations of motion. 
@@ -47,10 +47,10 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, T, file_name, me
     f = open(file_name, "w")
     f.write("N={} d={}\n".format(pos.shape[0], pos.shape[1])) # header
     save_data(f, 0, pos, vel) # save initial position
-    rescaling = [[0,0]] # [temperature of the system, time of the reescaling]
+    rescaling = [[1,0]] # [temperature of the system, time of the reescaling]
     
     for k in np.arange(1, num_tsteps+1):
-        print("\rtime step : {:7d}/{} | temperature={:0.5f}/{:0.5f}".format(k, num_tsteps, rescaling[-1][0], T), end="")
+        print("\rtime step : {:7d}/{} | temperature={:0.5f}/{:0.5f} ({:0.5f})".format(k, num_tsteps, rescaling[-1][0], T, np.abs(1-np.sqrt(T/rescaling[-1][0]))), end="")
 
         if method == "verlet":
             pos, vel = simulate_step_verlet(pos, vel, timestep, box_dim)
