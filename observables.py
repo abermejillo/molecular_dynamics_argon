@@ -32,7 +32,7 @@ def pair_correlation_function(file_name, dr, L, r_max=None):
     time, pos, _ = sim.load_data(file_name)
     N = pos.shape[0]
 
-    for k, t in enumerate(time[:25]):
+    for k, t in enumerate(time):
         print("\r{}/{}".format(k+1, len(time)), end="")
         rel_pos, rel_dist = sim.atomic_distances(pos[k], L)
         for i, r_ in enumerate(r):
