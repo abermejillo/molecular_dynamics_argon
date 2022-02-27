@@ -28,14 +28,17 @@ def pair_correlation_function(file_name, dr, L, r_max=None):
 
     if r_max is None: r_max = L
     r = np.arange(dr, r_max+dr, dr) # start != 0, because g = 1/0 is not defined
-    g = np.zeros(len(r))
+    n = np.zeros(len(r))
     time, pos, _ = sim.load_data(file_name)
     N = pos.shape[0]
 
-    for k, r_ in enumerate(r):
-        print("\r{}/{}".format(k+1, len(r)), end="")
-        n_ave = len(np.where((pos >= r_) & (pos < r_ + dr))[0])/len(time)
-        g[k] = 2*L**3 / (N*(N-1)) * n_ave / (4*np.pi*r_**2 * dr)
+    for k, t in enumerate(time[:25]):
+        print("\r{}/{}".format(k+1, len(time)), end="")
+        rel_pos, rel_dist = sim.atomic_distances(pos[k], L)
+        for i, r_ in enumerate(r):
+            n[i] += len(np.where((rel_dist >= r_) & (rel_dist < r_ + dr))[0])
+    
+    g = 2*L**3 / (N*(N-1)) * (n/len(time)) / (4*np.pi*r_**2 * dr)
 
     print("")
 
