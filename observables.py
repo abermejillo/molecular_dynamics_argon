@@ -1,0 +1,42 @@
+import numpy as np
+
+import simulate as sim
+
+
+def pair_correlation_function(file_name, dr, L, r_max=None):
+    """
+    Returns the pair correlation function averaged over time. 
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+    dr : float
+		distance between bins in the histogram
+	L : float
+		Box size
+    r_max : float
+        Maximum value for r (distance between particles)
+
+    Returns
+    -------
+    r : np.ndarray(int(r_max/dr)+1)
+        Distance between pairs of particles
+    g : np.ndarray(int(r_max/dr)+1)
+        Pair correlation function as a function of r
+    """
+
+    if r_max is None: r_max = L
+    r = np.arange(dr, r_max+dr, dr) # start != 0, because g = 1/0 is not defined
+    g = np.zeros(len(r))
+    time, pos, _ = sim.load_data(file_name)
+    N = pos.shape[0]
+
+    for k, r_ in enumerate(r):
+        print("\r{}/{}".format(k+1, len(r)), end="")
+        n_ave = len(np.where((pos >= r_) & (pos < r_ + dr))[0])/len(time)
+        g[k] = 2*L**3 / (N*(N-1)) * n_ave / (4*np.pi*r_**2 * dr)
+
+    print("")
+
+    return r, g
