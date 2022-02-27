@@ -18,7 +18,7 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, T, file_name, me
 
     Parameters
     ----------
-    init_pos : np.ndarra(N,d)
+    init_pos : np.ndarray(N,d)
         Initial positions of the atoms in Cartesian space
     init_vel : np.ndarray(N,d)
         Initial velocities of the atoms in Cartesian space
@@ -150,7 +150,7 @@ def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, fi
 
     Parameters
     ----------
-    init_pos : np.ndarra(N,d)
+    init_pos : np.ndarray(N,d)
         Initial positions of the atoms in Cartesian space
     init_vel : np.ndarray(N,d)
         Initial velocities of the atoms in Cartesian space
