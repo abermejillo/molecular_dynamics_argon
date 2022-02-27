@@ -28,11 +28,6 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, T, file_name, me
         Duration of a single simulation step
     box_dim : float
         Dimensions of the simulation box
-    T : float
-        Temperature of the system
-    resc_thr : [float, float]
-        First argument is the error for the temperature of the system (to do rescalings)
-        Second argument is the minimum time between reescalings (to let the system equilibrate)
     file_name : str
         Name of the CSV file to store the simulation data
     method : "verlet" or "euler"
@@ -47,20 +42,14 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, T, file_name, me
     f = open(file_name, "w")
     f.write("N={} d={}\n".format(pos.shape[0], pos.shape[1])) # header
     save_data(f, 0, pos, vel) # save initial position
-    rescaling = [[1,0]] # [temperature of the system, time of the reescaling]
     
     for k in np.arange(1, num_tsteps+1):
-        print("\rtime step : {:7d}/{} | temperature={:0.5f}/{:0.5f} ({:0.5f})".format(k, num_tsteps, rescaling[-1][0], T, np.abs(1-np.sqrt(T/rescaling[-1][0]))), end="")
+        print("\rtime step : {:7d}/{}".format(k, num_tsteps), end="")
 
         if method == "verlet":
             pos, vel = simulate_step_verlet(pos, vel, timestep, box_dim)
         if method == "euler":
             pos, vel = simulate_step_euler(pos, vel, timestep, box_dim)
-
-        # rescaling of vel for temperature equilibrium
-        if ((k*timestep - rescaling[-1][1]) > resc_thr[1]) and (np.abs(temperature(vel) - T) > resc_thr[0]):
-            vel, T_prev = rescale_velocity(vel, T)
-            rescaling += [[T_prev, k*timestep]]
 
         save_data(f, k*timestep, pos, vel)
 
@@ -151,6 +140,79 @@ def simulate_step_verlet(pos, vel, timestep, box_dim):
 
     return pos, vel
     
+
+def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, file_name, method="verlet", resc_thr=[1E-2, 0.1]):
+    """
+    Given a temperature and initial positions and velocities, sets the system under equilibrium
+    (up to some error given by the parameters in 'resc_thr'). 
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    init_pos : np.ndarra(N,d)
+        Initial positions of the atoms in Cartesian space
+    init_vel : np.ndarray(N,d)
+        Initial velocities of the atoms in Cartesian space
+    max_num_tsteps : int
+        Maximum number of simulation steps before reaching equilibrium
+    timestep : float
+        Duration of a single simulation step
+    box_dim : float
+        Dimensions of the simulation box
+    T : float
+        Temperature of the system
+    resc_thr : [float, float]
+        First argument is the error for the temperature of the system (to do rescalings)
+        Second argument is the minimum time between reescalings (to let the system equilibrate)
+    file_name : str
+        Name of the CSV file to store the simulation data
+    method : "verlet" or "euler"
+        Selects method for the time evoluiton algorithm
+
+    Returns
+    -------
+    eq_reached : bool
+        If True, equilibrium has been reached
+    """
+
+    pos, vel = init_pos, init_vel
+    f = open(file_name, "w")
+    f.write("N={} d={}\n".format(pos.shape[0], pos.shape[1])) # header
+    save_data(f, 0, pos, vel) # save initial position
+
+    rescaling = [[1,0]] # [temperature of the system, time of the reescaling]
+    eq_reached = False # if False, continues to check rescaling
+    
+    for k in np.arange(1, max_num_tsteps+1):
+        print("\rtime step : {:7d}/{} | temperature={:0.5f}/{:0.5f} ({:0.5f})".format(k, max_num_tsteps, rescaling[-1][0], T, np.abs(1-np.sqrt(T/rescaling[-1][0]))), end="")
+
+        if method == "verlet":
+            pos, vel = simulate_step_verlet(pos, vel, timestep, box_dim)
+        if method == "euler":
+            pos, vel = simulate_step_euler(pos, vel, timestep, box_dim)
+
+        # rescaling of vel for temperature equilibrium
+        if (not eq_reached) and ((k*timestep - rescaling[-1][1]) > resc_thr[1]):
+            T_current = temperature(vel) 
+            if np.abs(T_current - T) > resc_thr[0]:
+                vel, T_prev = rescale_velocity(vel, T, T_current=T_current)
+                rescaling += [[T_prev, k*timestep]]
+            else:
+                eq_reached = True
+
+        save_data(f, k*timestep, pos, vel)
+
+        if eq_reached:
+            break
+
+    print("\rtime step : {:7d}/{} | temperature={:0.5f}/{:0.5f}".format(k, max_num_tsteps, T_current, T), end="")
+
+    print("")
+    f.close()
+
+    return eq_reached
+
 
 def atomic_distances(pos, box_dim):
     """
@@ -421,7 +483,7 @@ def temperature(vel):
 
     return T
 
-def rescale_velocity(vel, T):
+def rescale_velocity(vel, T, T_current=None):
     """
     Rescales velocities to match the desired temperature
     N = number of particles
@@ -438,17 +500,18 @@ def rescale_velocity(vel, T):
     -------
     resc_vel : np.ndarray(N,d)
         Rescaled array of particle velocities
-    T_previous : float
+    T_current : float
         (unitless) actual temperature of the system before the reescaling
     """
 
     N = vel.shape[0]
 
-    T_previous = temperature(vel)
-    resc_factor = np.sqrt(T/T_previous)
+    if T_current is None:
+        T_current = temperature(vel)
+    resc_factor = np.sqrt(T/T_current)
     resc_vel = resc_factor*vel
 
-    return resc_vel, T_previous
+    return resc_vel, T_current
 
 
 def save_data(file_class, time, pos, vel):
@@ -567,3 +630,42 @@ def load_initial_data(file_name):
     init_vel = init_vel.reshape(N,d)
 
     return init_pos, init_vel
+
+
+def load_final_data(file_name):
+    """
+    Loads final data from CSV file that has the same structure
+    as specified in 'save_data' function. 
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+
+    Returns
+    -------
+    init_pos : np.ndarray(N,d)
+        Positions of the particles for all the time steps of the simulation
+    init_vel: np.ndarray(N,d)
+        Velocities of particles for all the time steps of the simulation
+    """
+
+    # load header information
+    f = open(file_name, "r")
+    header = f.readline()
+    data = f.read()
+    final_data = data.split("\n")[-2] # last element is empty line
+    f.close()
+    N, d = header.split(" ")[:2]
+    N, d = int(N.replace("N=", "")), int(d.replace("d=", ""))
+
+    # load data
+    data = np.array([float(i) for i in final_data.split(",")])
+    final_pos = data[1:d*N+1]
+    final_pos = final_pos.reshape(N,d)
+    final_vel = data[d*N+1:2*d*N+1]
+    final_vel = final_vel.reshape(N,d)
+
+    return final_pos, final_vel
