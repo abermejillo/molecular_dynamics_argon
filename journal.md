@@ -168,9 +168,9 @@ We can see how they start following the same trajectory, but in a very short tim
 
 With this all of the milestones of the week are fulfilled. We have been keeping our code as structured as possible along the whole project; the structure it has now will most probably be kept unchanged. 
 
-Apart from this we show some results regarding milestones of following weeks. We have included the function that provides as an initial position distribution an FCC lattice, which can be seen in the following simulation
+Apart from this we show some results regarding milestones of following weeks. We have included the function that provides as an initial position distribution an FCC lattice, which can be seen in the following simulation where we can (more or less) see the FCC structure at a temperature of 119.8 K.
 
-ADD GIF IN AN FCC LATTICE 
+![sample video](results/W3_movie_FCClattice.gif)
 
 And also included the initialisation for the Maxwell distributed velocities. The following graph shows a density probability function computed from a histogram of the velocities with 20 bins. On top of it there is a gaussian with the same mean (zero) and standard deviation.
 
@@ -187,11 +187,14 @@ Finally, some comments on the adaptive step algorithm we wanted to implement. Th
 What we tried was implementing a correction on the timestep following the idea explained in the following paper: [Numerical Solutions of Nonlinear Ordinary Differential Equations
 by Using Adaptive Runge-Kutta Method](https://www.researchgate.net/publication/335841661_Numerical_Solutions_of_Nonlinear_Ordinary_Differential_Equations_by_Using_Adaptive_Runge-Kutta_Method). They compare two algorithms to compute the error at each step. In their case it is between fith and forth order runge kutta, for us it is between Euler and velocity-Verlet algorithm. With that we can update the timestep according to the following formula
 
-if error $`\geq`$ tolerance then $`h_{new}=\delta h (\frac{tolerance}{error})^{0.2}`$ 
+- if error $`\geq`$ tolerance then $`h_{new}=\delta h (\frac{tolerance}{error})^{0.2}`$ 
 
-if error $`\<`$ tolerance then $`h_{new}=\delta h (\frac{tolerance}{error})^{0.25}`$ 
+- if error $`<`$ tolerance then $`h_{new}=\delta h (\frac{tolerance}{error})^{0.25}`$ 
 
-TO BE FINISHED
+where $`error=0.5h^2F(x(t))`$, the difference between Euler and Verlet positions. Here we can see that this error is given by a vector, that is, we have an error for each particle. If we decided to take the maximum of this errors as the error, then we always get a super high value (several orders of magnitude greater than the box_size). The aproach taken was then to take the median of this array. following this approach we are able to change the timestep without going to ridiculously small values. 
+
+So far this approach does not give better results than our previous code. We might discuss it in this weeks meeting and decide whether we want to put more effort into investigating different approaches to adaptive step solving of ODEs.
+
 
 (due 28 February 2022, 23:59)
 
