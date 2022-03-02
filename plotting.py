@@ -4,6 +4,9 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 import imageio
 import simulate as sim
+import observables as obs
+from scipy.signal import argrelextrema
+import scipy.stats as stats
 
 
 def GIF_2D(gif_name, data_file, num_frames, box_dim):
@@ -617,3 +620,14 @@ def plot_maxwell_distribution(init_vel, temp):
     plt.show()
     plt.clf()
     return 
+
+def plot_pair_correlation_function(box_length, file="output.csv",bin_distance = 0.01):
+    r, g = obs.pair_correlation_function(file, bin_distance, box_length)
+    print("The relative maxima are located in the following positions (in units of sigma)")
+    print(r[argrelextrema(g, np.greater)])
+    plt.plot(r,g)
+    plt.xlabel("$r/\sigma$")
+    plt.ylabel("$g(r)$")
+    plt.show()
+    plt.clf()
+    return

@@ -10,8 +10,8 @@ particle_num = 4*(3**3)
 dim = 3 
 lattice_const = 1.54478 # (sigma)
 
-temperature = 0.02 # (K*kB/epsilon)
-temperature_error = 0.005 # error in the temperature when rescaling (K*kB/epsilon)
+temperature = 1 # (K*kB/epsilon)
+temperature_error = 0.05 # error in the temperature when rescaling (K*kB/epsilon)
 rescale_time = 0.1 # interval between rescalings
 
 run_time = 0.9 # sqrt(mass*sigma^2/epsilon)
@@ -49,8 +49,5 @@ print("DONE")
 #plot.E_vs_t("output.csv", box_length, kinetic=True, potential=False, total=False)
 
 # Observables
-r, g = obs.pair_correlation_function("output.csv",0.01,box_length)
-
-plt.plot(r,g)
-plt.show()
-print( r[np.argmax(g[0:150])] ) # first maximum at sqrt(2)/2*lattice_constant = 1.0889
+plot.plot_pair_correlation_function(box_length) # first maximum at sqrt(2)/2*lattice_constant = 1.0889
+plot.plot_maxwell_distribution(eq_vel, temperature)
