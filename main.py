@@ -14,17 +14,18 @@ import observables as obs
 particle_num = 4*(5**3) 
 dim = 3 
 lattice_const = 1.54478 # (sigma)
-temperature = 0.05 # (K*kB/epsilon)
-temperature_error = 0.005 # error in the temperature when rescaling (K*kB/epsilon)
+temperature = 1 # (K*kB/epsilon)
+temperature_error = 0.05 # error in the temperature when rescaling (K*kB/epsilon)
 rescale_time = 0.1 # interval between rescalings
 
-run_time = 1 # sqrt(mass*sigma^2/epsilon)
-num_tsteps = 750 
+run_time = 2 # sqrt(mass*sigma^2/epsilon)
+num_tsteps = 1000 
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
-simulation = ["equilibrium", "simulation"] # ["equilibrium", "simulation"]
-observables = ["specific_heat","pair_correlation"] # ["pair_correlation", "specific_heat"]
+simulation = ["simulation"] # ["equilibrium", "simulation"]
+observables = ["displacement"] # ["pair_correlation", "specific_heat", "displacement"]
+plotting = [] # ["gif", "Evst"]
 
 ##########################################################
 
@@ -56,16 +57,18 @@ if "simulation" in simulation:
 # 3. Show results
 
 # Build a gif 
-#plot.GIF_3D("movie_FCClattice.gif", "output.csv", 100, box_length)
+if "gif" in plotting:
+	plot.GIF_3D("movie_FCClattice.gif", "output.csv", 100, box_length)
 
 # Check energy conservation
-#plot.E_vs_t("output.csv", box_length, kinetic=True, potential=False, total=False)
+if "Evst" in plotting:
+	plot.E_vs_t("output.csv", box_length, kinetic=True, potential=False, total=False)
 
 # Observables
 if "pair_correlation" in observables:
 	print("CALCULATING PAIR CORRELATION FUNCTION...")
-	r, g = obs.pair_correlation_function("output.csv", 0.01, box_length)
-	plot.plot_pair_correlation_function(r,g)
+	r, g = obs.pair_correlation_function("output.csv", 0.01, box_length, r_max=3)
+	plot.plot_pair_correlation_function(r, g)
 	print("The relative maxima are located in the following positions (in units of sigma)")
 	print(r[argrelextrema(g, np.greater)])
 	print("DONE") # first maximum at sqrt(2)/2*lattice_constant = 1.0889
@@ -78,3 +81,8 @@ if "specific_heat" in observables:
 	print("DONE")
 
 	print("specific heat per atom (T = {:0.5f}) = {:0.3f}".format(temperature_eq, c))
+
+if "displacement" in observables:
+	print("CALCULATING MEAN-SQUARED DISPLACEMENT...")
+	time_steps, Ax2 = obs.mean_squared_displacement("output.csv")
+	print("DONE")

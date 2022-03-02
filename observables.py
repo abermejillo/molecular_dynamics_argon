@@ -76,3 +76,36 @@ def specific_heat(file_name, starting_time_step=0):
     c = 1.5/(1-3*particle_num*r/2)
 
     return c
+
+
+def mean_squared_displacement(file_name, time_steps=None):
+    """
+    Returns the mean-squared displacement as a function of time. 
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+    time_steps : np.ndarray
+        Array of times in which to calculate the mean-squared displacement
+        If None, it uses time from sim.load_data as time_steps
+
+    Returns
+    -------
+    time_steps : np.ndarray
+        See Parameters
+    Ax2 : np.ndarray(len(time))
+        Mean-squared displacement as a function of time
+    """
+
+    time, pos, _ = sim.load_data(file_name)
+    particle_num = pos.shape[0]
+    if time_steps is None: time_steps = time
+    Ax2 = np.zeros(len(time_steps))
+
+    for k, t in enumerate(time_steps):
+        dist = (pos[k] - pos[0])
+        dist = (dist*dist).sum(axis=1)**0.5
+        Ax2[k] = dist.sum()/particle_num
+
+    return time_steps, Ax2
