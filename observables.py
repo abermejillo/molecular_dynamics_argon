@@ -35,25 +35,26 @@ def pair_correlation_function(file_name, dr, box_length, r_max=None):
     for k, t in enumerate(time):
         print("\r{}/{}".format(k+1, len(time)), end="")
         rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
-        for i, r_ in enumerate(r):
-            n[i] += len(np.where((rel_dist >= r_) & (rel_dist < r_ + dr))[0])
+        for i, r_i in enumerate(r):
+            n[i] += len(np.where((rel_dist >= r_i) & (rel_dist < r_i + dr))[0])
     
-    g = 2*box_length**3 / (particle_num*(particle_num-1)) * (n/len(time)) / (4*np.pi*r_**2 * dr)
+    g = 2*box_length**3 / (particle_num*(particle_num-1)) * (n/len(time)) / (4*np.pi*r**2 * dr)
 
     print("")
 
     return r, g
 
-def specific_heat(data_file, starting_time_step=0):
+
+def specific_heat(file_name, starting_time_step=0):
     """
     Computes the specific heat per atom of a system.
 
     Parameters
     ----------
-    data_file : str
+    file_name : str
         Name of the CSV file in which the data is stored
     starting_time_step : int
-        Number of time steps to skip from the beginning of the data_file
+        Number of time steps to skip from the beginning of the file_name
 
     Returns
     -------
@@ -61,7 +62,7 @@ def specific_heat(data_file, starting_time_step=0):
         Specific heat per atom of the system
     """
 
-    time, pos, vel = sim.load_data(data_file)
+    time, pos, vel = sim.load_data(file_name)
     time = time[starting_time_step:]
     pos = pos[starting_time_step:,:,:]
     vel = vel[starting_time_step:,:,:]
