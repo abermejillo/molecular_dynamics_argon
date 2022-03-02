@@ -44,7 +44,7 @@ def pair_correlation_function(file_name, dr, box_length, r_max=None):
 
     return r, g
 
-def specific_heat(data_file,starting_time_step):
+def specific_heat(data_file, starting_time_step=0):
     """
     Computes the specific heat per atom of a system.
 
@@ -52,17 +52,19 @@ def specific_heat(data_file,starting_time_step):
     ----------
     data_file : str
         Name of the CSV file in which the data is stored
+    starting_time_step : int
+        Number of time steps to skip from the beginning of the data_file
 
     Returns
     -------
     c : float
-        Specific heat per atom of the system.
+        Specific heat per atom of the system
     """
 
     time, pos, vel = sim.load_data(data_file)
-    time = time[starting_time_step:-1]
-    pos = pos[starting_time_step:-1,:,:]
-    vel = vel[starting_time_step:-1,:,:]
+    time = time[starting_time_step:]
+    pos = pos[starting_time_step:,:,:]
+    vel = vel[starting_time_step:,:,:]
     num_tsteps = len(time) 
     particle_num = np.shape(vel)[1] 
     square_of_mean_kin = (sim.kinetic_energy(vel)/num_tsteps)**2
