@@ -8,7 +8,7 @@ EPSILON = 119.8*KB # parameter of LJ potential for Argon atoms in SI
 MASS = 6.6335209E-26 # Argon particle mass in SI
 
 
-def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, T, file_name, method="verlet", resc_thr=[1E-2, 0.1]):
+def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, method="verlet", resc_thr=[1E-2, 0.1]):
     """
     Molecular dynamics simulation using the Euler algorithm
     to integrate the equations of motion. 
