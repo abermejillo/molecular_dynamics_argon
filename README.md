@@ -15,7 +15,7 @@ Clone this repo and run `pip install -r requirements.txt` to install its depende
 Open `main.py` and specify the input parameters:
 - `N` : number of particles, always in the shape 4*(k**3)
 - `d` : dimensionality of the box
-- `T` : temperature in units of $`k_{B}/\epsilon`$
+- `T` : temperature in units of $`\epsilon / k_{B}`$
 - `num_tsteps` : number of time steps of the simulation
 - `run_time` : run time of the simulation in units of $`(m \sigma^2 / \epsilon )^{1/2}`$
 - `algorithm_method` : algorithm to calculate the temporal evolution (`verlet` or `euler`)
