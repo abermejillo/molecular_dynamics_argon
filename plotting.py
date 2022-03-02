@@ -5,7 +5,6 @@ import os
 import imageio
 import simulate as sim
 import observables as obs
-from scipy.signal import argrelextrema
 import scipy.stats as stats
 
 
@@ -621,10 +620,7 @@ def plot_maxwell_distribution(init_vel, temp):
     plt.clf()
     return 
 
-def plot_pair_correlation_function(box_length, file="output.csv",bin_distance = 0.01):
-    r, g = obs.pair_correlation_function(file, bin_distance, box_length)
-    print("The relative maxima are located in the following positions (in units of sigma)")
-    print(r[argrelextrema(g, np.greater)])
+def plot_pair_correlation_function(r,g):
     plt.plot(r,g)
     plt.xlabel("$r/\sigma$")
     plt.ylabel("$g(r)$")

@@ -1,10 +1,12 @@
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
+from scipy.signal import argrelextrema
 
 import simulate as sim
 import plotting as plot
 import observables as obs
+
 
 ##########################################################
 
@@ -12,18 +14,17 @@ import observables as obs
 particle_num = 4*(5**3) 
 dim = 3 
 lattice_const = 1.54478 # (sigma)
-
-temperature = 0.2 # (K*kB/epsilon)
-temperature_error = 0.01 # error in the temperature when rescaling (K*kB/epsilon)
+temperature = 0.05 # (K*kB/epsilon)
+temperature_error = 0.005 # error in the temperature when rescaling (K*kB/epsilon)
 rescale_time = 0.1 # interval between rescalings
 
 run_time = 1 # sqrt(mass*sigma^2/epsilon)
-num_tsteps = 1000 
+num_tsteps = 750 
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
 simulation = ["equilibrium", "simulation"] # ["equilibrium", "simulation"]
-observables = ["specific_heat"] # ["pair_correlation", "specific_heat"]
+observables = ["specific_heat","pair_correlation"] # ["pair_correlation", "specific_heat"]
 
 ##########################################################
 
@@ -64,11 +65,10 @@ if "simulation" in simulation:
 if "pair_correlation" in observables:
 	print("CALCULATING PAIR CORRELATION FUNCTION...")
 	r, g = obs.pair_correlation_function("output.csv", 0.01, box_length)
-	print("DONE")
-
-	plt.plot(r,g)
-	plt.show()
-	print( r[np.argmax(g[0:150])] ) # first maximum at sqrt(2)/2*lattice_constant = 1.0889
+	plot.plot_pair_correlation_function(r,g)
+	print("The relative maxima are located in the following positions (in units of sigma)")
+	print(r[argrelextrema(g, np.greater)])
+	print("DONE") # first maximum at sqrt(2)/2*lattice_constant = 1.0889
 
 if "specific_heat" in observables:
 	print("CALCULATING SPECIFIC HEAT PER ATOM...")
