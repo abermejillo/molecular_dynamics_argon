@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import os
 import imageio
+import scipy.stats as stats
+
 import simulate as sim
 import observables as obs
-import scipy.stats as stats
 
 
 def GIF_2D(gif_name, data_file, num_frames, box_dim):
@@ -62,6 +63,7 @@ def GIF_2D(gif_name, data_file, num_frames, box_dim):
 
     return
 
+
 def GIF_3D(gif_name, data_file, num_frames, box_dim):
     """
     Generates frames for the time evolution of particles in 2D
@@ -115,6 +117,7 @@ def GIF_3D(gif_name, data_file, num_frames, box_dim):
     print("DONE")
 
     return
+
 
 def plot_pos_2D(ax, pos, L, central_box=True, relative_pos=False):
     """
@@ -177,6 +180,7 @@ def plot_pos_2D(ax, pos, L, central_box=True, relative_pos=False):
     ax.xaxis.set_ticks_position('both')
 
     return ax
+
 
 def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=False):
     """
@@ -434,6 +438,7 @@ def reldist_vs_t(data_file, i, j, box_dim):
 
     return
 
+
 def GIF_potential_energy(gif_name, data_file, num_frames, i , j, box_dim):
     """
     Generates frames for the time evolution of the potential energy 
@@ -533,6 +538,7 @@ def GIF_potential_energy(gif_name, data_file, num_frames, i , j, box_dim):
     
     return
 
+
 def merge_GIF_3D(gif_name, data_file1, data_file2, num_frames, box_dim):
     """
     Generates frames for the time evolution of particles in 2D, merging
@@ -592,6 +598,7 @@ def merge_GIF_3D(gif_name, data_file1, data_file2, num_frames, box_dim):
 
     return
 
+
 def plot_maxwell_distribution(init_vel, temp):
     """
     Generates a plot that shows a probability density of a a particle having a given velocity. 
@@ -609,7 +616,7 @@ def plot_maxwell_distribution(init_vel, temp):
     None
     """
 
-    plt.hist(init_vel[:,0],bins=20,density=True,label='Hist of velocities') 
+    plt.hist(init_vel[:,0], bins=20, density=True, label='Hist of velocities') 
     sigma = np.sqrt(temp)
     x = np.linspace(-3*sigma,3*sigma, 100)
     plt.plot(x, stats.norm.pdf(x, 0, sigma),label='Gauss$(\mu=0, \sigma=\sqrt{T})$')
@@ -620,10 +627,20 @@ def plot_maxwell_distribution(init_vel, temp):
     plt.clf()
     return 
 
-def plot_pair_correlation_function(r,g):
-    plt.plot(r,g)
+
+def plot_pair_correlation_function(r, g):
+    plt.plot(r, g)
     plt.xlabel("$r/\sigma$")
-    plt.ylabel("$g(r)$")
+    plt.ylabel("$g(r/\sigma)$")
+    plt.show()
+    plt.clf()
+    return
+
+
+def plot_Ax2(time, Ax2):
+    plt.plot(time, Ax2)
+    plt.xlabel("adimensional $t$")
+    plt.ylabel("adimensional $\Delta x^2(t)$")
     plt.show()
     plt.clf()
     return

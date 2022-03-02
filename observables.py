@@ -109,3 +109,28 @@ def mean_squared_displacement(file_name, time_steps=None):
         Ax2[k] = dist.sum()/particle_num
 
     return time_steps, Ax2
+
+
+def diffusion(file_name):
+    """
+    Returns the mean-squared displacement as a function of time. 
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+
+    Returns
+    -------
+    D : float
+        Diffussion constant
+    """
+
+    time, pos, _ = sim.load_data(file_name)
+    particle_num = pos.shape[0]
+
+    dist = (pos[-1] - pos[0])
+    dist = (dist*dist).sum(axis=1)**0.5
+    D = dist.sum()/particle_num
+
+    return D

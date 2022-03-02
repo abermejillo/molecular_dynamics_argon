@@ -14,17 +14,17 @@ import observables as obs
 particle_num = 4*(5**3) 
 dim = 3 
 lattice_const = 1.54478 # (sigma)
-temperature = 1 # (K*kB/epsilon)
-temperature_error = 0.05 # error in the temperature when rescaling (K*kB/epsilon)
+temperature = 50 # (K*kB/epsilon)
+temperature_error = 0.5 # error in the temperature when rescaling (K*kB/epsilon)
 rescale_time = 0.1 # interval between rescalings
 
-run_time = 2 # sqrt(mass*sigma^2/epsilon)
-num_tsteps = 1000 
+run_time = 8 # sqrt(mass*sigma^2/epsilon)
+num_tsteps = 3000 
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
 simulation = ["simulation"] # ["equilibrium", "simulation"]
-observables = ["displacement"] # ["pair_correlation", "specific_heat", "displacement"]
+observables = ["diffusion"] # ["pair_correlation", "specific_heat", "displacement", "diffusion"]
 plotting = [] # ["gif", "Evst"]
 
 ##########################################################
@@ -85,4 +85,11 @@ if "specific_heat" in observables:
 if "displacement" in observables:
 	print("CALCULATING MEAN-SQUARED DISPLACEMENT...")
 	time_steps, Ax2 = obs.mean_squared_displacement("output.csv")
+	print("DONE")
+	plot.plot_Ax2(time_steps, Ax2)
+
+if "diffusion" in observables:
+	print("CALCULATING DIFFUSION COEFFICIENT...")
+	D = obs.diffusion("output.csv")
+	print("Diffusion coefficient = {0:0.5f}".format(D))
 	print("DONE")
