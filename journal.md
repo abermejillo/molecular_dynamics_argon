@@ -200,6 +200,16 @@ So far, this approach does not give better results than our previous code. We mi
 
 
 ## Week 4
+
+# Bullet list
+
+1. Implement diffusion (@mserraperalta)
+2. Implement pressure (@dbedialaunetar)
+3. Check that our observable implementations are consistent with literature (@mserraperalta, @abermejillo, @dbedialaunetar)
+4. Start computing errors, for example, the error for the specific heat (@abermejillo)
+5. Start structuring the report: theoretical background, methods... (@mserraperalta, @abermejillo, @dbedialaunetar)
+
+
 (due 7 March 2022, 23:59)
 
 

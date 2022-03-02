@@ -4,6 +4,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 import imageio
 import simulate as sim
+import observables as obs
+import scipy.stats as stats
 
 
 def GIF_2D(gif_name, data_file, num_frames, box_dim):
@@ -617,3 +619,11 @@ def plot_maxwell_distribution(init_vel, temp):
     plt.show()
     plt.clf()
     return 
+
+def plot_pair_correlation_function(r,g):
+    plt.plot(r,g)
+    plt.xlabel("$r/\sigma$")
+    plt.ylabel("$g(r)$")
+    plt.show()
+    plt.clf()
+    return
