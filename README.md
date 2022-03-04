@@ -2,7 +2,7 @@
 
 Classical dynamics of $`N`$ Argon atoms inside a $`d`$-dimensional box with periodic boundary conditions. 
 
-The atom-pair interaction is modelled as a Lennard-Jones potential and the numerical evolution can be done using the Euler method or the velocity-Verlet algorithm. 
+The atom-pair interaction is modelled as a Lennard-Jones potential and the numerical evolution can be done using the Euler method or the velocity-Verlet algorithm. The observables than can be calculated are (1) pair correlation function, (2) specific heat, (3) mean-squared displacement, (4) diffusion constant and (5) pressure. 
 
 
 ## Setup
@@ -13,44 +13,24 @@ Clone this repo and run `pip install -r requirements.txt` to install its depende
 ## Usage
 
 Open `main.py` and specify the input parameters:
-- `N` : number of particles, always in the shape 4*(k**3)
-- `d` : dimensionality of the box
-- `T` : temperature in units of $`\epsilon / k_{B}`$
-- `num_tsteps` : number of time steps of the simulation
-- `run_time` : run time of the simulation in units of $`(m \sigma^2 / \epsilon )^{1/2}`$
-- `algorithm_method` : algorithm to calculate the temporal evolution (`verlet` or `euler`)
+- Box and particles
+    - `particle_num` : number of particles, always in the shape $`4k^3`$ with $`k \in \mathbb{N}`$ to completely fill the box
+    - `dim` : dimensionality of the box (FCC lattice only implemented for `dim=3`)
+    - `lattice_const` : lattice constant of the FCC in units of $`\sigma`$
+- Temperature
+    - `temperature` : temperature in units of $`\epsilon / k_{B}`$
+    - `temperature_error` : maximum error in the temperature when rescaling in units of $`\epsilon / k_{B}`$
+    - `rescale_time` : time interval between rescalings in units of $`(m \sigma^2 / \epsilon )^{1/2}`$
+- Molecular simulation
+    - `run_time` : run time of the simulation in units of $`(m \sigma^2 / \epsilon )^{1/2}`$
+    - `num_tsteps` : number of time steps of the simulation
+    - `algorithm_method` : algorithm used to calculate the temporal evolution (`verlet` or `euler`)
+    - `simulation` : list of steps to do `["equilibrium", "simulation"]`
+- Post-processing of the simulation
+    - `observables` : list of observables to calculate `["pair_correlation", "specific_heat", "displacement", "diffusion"]`
+    - `plotting` : list of plots to perform `["gif", "Evst"]`
 
-
-
-Run `main.py` to:
-1. Execute the simulation and store the results in `output.csv`:
-
-    `sim.simulate(init_pos, init_vel, num_tsteps, run_time/num_tsteps, L, "output.csv", method=algorithm_method)`
-
-2. Create a 3D gif of the evolution:  
-
-    `plot.GIF_3D("movie.gif", "output.csv", 300, L)`
-
-3. Plot the total energy as a function of time (as well as kinetic and potential energies separately):
-
-    `plot.E_vs_t("output.csv", L, kinetic_potential=True)`
-
-4. Plot the relative energy deviation as a function of time:
-
-    `plot.E_conservation("output.csv", L)`
-
-5. Plot the relative distance between two particles as a function of time:
-
-    `plot.reldist_vs_t("output.csv", 0, 1, L)`
-
-6. Create a GIF that shows how the energy is translated from kinetic to potential and viceversa (only significant with two particles). 
-
-    `plot.GIF_potential_energy("movie2.gif", "output.csv", 300, 0 , 1, L)`
-
-7. Plot the probability density function for the initial velocities (Maxwell distribution). 
-
-    `plot.plot_maxwell_distribution(init_vel,T)`
-
+For a more detailed information of the available plots (including e.g. histogram of velocities and plots of observables), see `plotting.py`. 
 
 
 ## Authors 
