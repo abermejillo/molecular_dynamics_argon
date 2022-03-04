@@ -134,3 +134,29 @@ def diffusion(file_name):
     D = dist.sum()/particle_num
 
     return D
+
+
+def autocorrelation_function(data):
+    """
+    Returns the autocorrelation function for a given variable as a function of time. 
+
+    Parameters
+    ----------
+    data : np.ndarray(len(time))
+        Variable as a function of time
+
+    Returns
+    -------
+    Xa : np.ndarray(len(time)-1)
+        Autocorrelation function for the given variable as a function of time
+    """
+
+    N = len(data)
+    Xa = np.zeros(N-1)
+
+    for t in range(N-1):
+        n = N - t
+        Xa[t] = ((N-t)*(data[:n]*data[t:n+t]).sum() - (data[:n]).sum()*(data[t:n+t]).sum()) / 
+                (np.sqrt((N-t)*(data[:n]**2).sum() - (data[:n].sum())**2) * np.sqrt((N-t)*(data[t:n+t]**2).sum() - (data[t:n+t].sum())**2))
+
+    return Xa
