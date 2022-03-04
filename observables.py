@@ -160,3 +160,33 @@ def autocorrelation_function(data):
                 (np.sqrt((N-t)*(data[:n]**2).sum() - (data[:n].sum())**2) * np.sqrt((N-t)*(data[t:n+t]**2).sum() - (data[t:n+t].sum())**2))
 
     return Xa
+
+
+def data_blocking(data, b_range):
+    """
+    Returns the error using data blocking as a function of block length size (b_range). 
+
+    Parameters
+    ----------
+    data : np.ndarray(len(time))
+        Variable as a function of time
+    b_range : np.ndarray
+        Block lenght sizes
+
+    Returns
+    -------
+    sigma : np.ndarray(len(time)-1)
+        Autocorrelation function for the given variable as a function of time
+    """
+
+    N = len(data)
+    sigma = np.zeros(len(b_range))
+
+    for k, b in enumerate(b_range):
+        Nb = int(N/b) 
+        data_ = data[:b*Nb]
+        blocks = data_.reshape(Nb, b)
+        average_blocks = np.average(blocks, axis=1)
+        sigma[k] = np.sqrt(((average_blocks**2).sum()/Nb - (average_blocks.sum()/Nb)**2) / (Nb-1)) 
+
+    return sigma
