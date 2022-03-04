@@ -13,19 +13,19 @@ import observables as obs
 # Input parameters
 particle_num = 4*(5**3) 
 dim = 3 
-lattice_const = 1.54478 # (sigma)
-temperature = 50 # (K*kB/epsilon)
-temperature_error = 0.5 # error in the temperature when rescaling (K*kB/epsilon)
-rescale_time = 0.1 # interval between rescalings
+lattice_const = 1.54478 # [\sigma]
+temperature = 10 # [\epsilon/kB]
+temperature_error = 0.05 # maximum error in the temperature when rescaling [\epsilon/k_B]
+rescale_time = 0.1 # interval between rescalings [(m \sigma^2 / \epsilon )^{1/2}]
 
-run_time = 8 # sqrt(mass*sigma^2/epsilon)
-num_tsteps = 3000 
+run_time = 2 # [\sqrt(mass*\sigma^2/\epsilon)]
+num_tsteps = 2000 
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
-simulation = ["simulation"] # ["equilibrium", "simulation"]
-observables = ["diffusion"] # ["pair_correlation", "specific_heat", "displacement", "diffusion"]
-plotting = [] # ["gif", "Evst"]
+simulation = [] # ["equilibrium", "simulation"]
+observables = [] # ["pair_correlation", "specific_heat", "displacement", "diffusion"]
+plotting = ["Evst"] # ["gif", "Evst"]
 
 ##########################################################
 
@@ -62,7 +62,7 @@ if "gif" in plotting:
 
 # Check energy conservation
 if "Evst" in plotting:
-	plot.E_vs_t("output.csv", box_length, kinetic=True, potential=False, total=False)
+	plot.E_vs_t("output_eq.csv", box_length, kinetic=True, potential=False, total=False, T=temperature, T_error=temperature_error)
 
 # Observables
 if "pair_correlation" in observables:

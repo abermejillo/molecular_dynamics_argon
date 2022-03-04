@@ -284,7 +284,7 @@ def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=Fa
     return ax
 
 
-def E_vs_t(data_file, box_dim, kinetic=False, potential=False, total=True):
+def E_vs_t(data_file, box_dim, kinetic=False, potential=False, total=True, T=None, T_error=None):
     """
     Plots energy as a function of time
 
@@ -303,15 +303,16 @@ def E_vs_t(data_file, box_dim, kinetic=False, potential=False, total=True):
     """
 
     time, pos, vel = sim.load_data(data_file)
+    N = pos.shape[1]
 
     E_total = []
     E_kinetic = []
     E_potential = []
     for k, t in enumerate(time):
         if kinetic or total:
-            E_kinetic += [sim.kinetic_energy(vel[k])] 
+            E_kinetic += [sim.kinetic_energy(vel[k])/N] 
         if potential or total:
-            E_potential += [sim.potential_energy(pos[k], box_dim)]
+            E_potential += [sim.potential_energy(pos[k], box_dim)/N]
         if total:
             E_total += [E_kinetic[-1] + E_potential[-1]] 
 
@@ -323,18 +324,29 @@ def E_vs_t(data_file, box_dim, kinetic=False, potential=False, total=True):
         ax.plot(time, E_kinetic, "-", label="kinetic E", color="red")
     if potential:
         ax.plot(time, E_potential, "-", label="potential E", color="blue")
+
+    if T is not None:
+        ax.axhline(y=1.5*(N-1)*T/N, color="black", linestyle="--")
+    if (T_error is not None) and (T is not None):
+        x = [time[0], time[-1]]
+        E_kin_min_error =  [1.5*(N-1)*(T - T_error)/N]*2
+        E_kin_max_error =  [1.5*(N-1)*(T + T_error)/N]*2
+        ax.fill_between(x, E_kin_min_error, E_kin_max_error, alpha=0.2, color="gray")
+
     ax.legend(loc="best")
 
     ax.set_xlim(0, np.max(time))
 
     ax.set_xlabel("dimensionless time")
-    ax.set_ylabel("dimensionless energy")
+    ax.set_ylabel("dimensionless energy per particle")
 
     # set axis' ticks inside figure
     ax.tick_params(axis="y",direction="in")
     ax.tick_params(axis="x",direction="in")
     ax.yaxis.set_ticks_position('both')
     ax.xaxis.set_ticks_position('both')
+
+    fig.tight_layout()
 
     plt.show()
     plt.clf()
