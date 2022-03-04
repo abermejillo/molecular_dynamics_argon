@@ -175,7 +175,7 @@ def data_blocking(data, b_range):
 
     Returns
     -------
-    sigma : np.ndarray(len(time)-1)
+    sigma : np.ndarray(len(b_range))
         Autocorrelation function for the given variable as a function of time
     """
 
