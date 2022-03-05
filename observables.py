@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import optimize
 
 import simulate as sim
 
@@ -164,7 +165,7 @@ def autocorrelation_function(data):
 
 def data_blocking(data, b_range):
     """
-    Returns the error using data blocking as a function of block length size (b_range). 
+    Returns error from data blocking as a function of block length size (b_range) and also the total one. 
 
     Parameters
     ----------
@@ -175,8 +176,10 @@ def data_blocking(data, b_range):
 
     Returns
     -------
+    error : float
+        Error of the given variable
     sigma : np.ndarray(len(b_range))
-        Autocorrelation function for the given variable as a function of time
+        Error of the given variable as a function of block length size
     """
 
     N = len(data)
@@ -189,4 +192,8 @@ def data_blocking(data, b_range):
         average_blocks = np.average(blocks, axis=1)
         sigma[k] = np.sqrt(((average_blocks**2).sum()/Nb - (average_blocks.sum()/Nb)**2) / (Nb-1)) 
 
-    return sigma
+    function = lambda x,a,b,c: b-c*np.exp(-a*x) # function for fitting the error
+    popt, _ = optimize.curve_fit(function,  b_range,  sigma)
+    error = popt[1]
+
+    return error, sigma
