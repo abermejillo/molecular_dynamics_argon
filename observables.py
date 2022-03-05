@@ -192,8 +192,64 @@ def data_blocking(data, b_range):
         average_blocks = np.average(blocks, axis=1)
         sigma[k] = np.sqrt(((average_blocks**2).sum()/Nb - (average_blocks.sum()/Nb)**2) / (Nb-1)) 
 
-    function = lambda x,a,b,c: b-c*np.exp(-a*x) # function for fitting the error
-    popt, _ = optimize.curve_fit(function,  b_range,  sigma)
-    error = popt[1]
+    try: 
+        function = lambda x,a,b,c: b-c*np.exp(-a*x) # function for fitting the error
+        popt, _ = optimize.curve_fit(function,  b_range,  sigma)
+        error = popt[1]
+    except:
+        error = np.max(sigma)
 
     return error, sigma
+
+
+def error_pair_correlation_function(file_name, dr, box_length, r_max=None):
+    """
+    Returns the pair correlation function averaged over time and its respective error. 
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+    dr : float
+        distance between bins in the histogram
+    box_length : float
+        Box size
+    r_max : float
+        Maximum value for r (distance between particles)
+
+    Returns
+    -------
+    r : np.ndarray(int(r_max/dr)+1)
+        Distance between pairs of particles
+    g : np.ndarray(int(r_max/dr)+1)
+        Pair correlation function as a function of r
+    g_error : np.ndarray(int(r_max/dr)+1)
+        Error of the pair correlation function as a function of r
+    """
+
+    if r_max is None: r_max = box_length
+    time, pos, _ = sim.load_data(file_name)
+    particle_num = pos.shape[0]
+    r = np.arange(dr, r_max+dr, dr) # start != 0, because g = 1/0 is not defined
+    n_time = np.zeros((len(time), len(r)))
+
+    for k, t in enumerate(time):
+        print("\rGet data : {}/{}".format(k+1, len(time)), end="")
+        rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
+        for i, r_i in enumerate(r):
+            n_time[k,i] = len(np.where((rel_dist >= r_i) & (rel_dist < r_i + dr))[0])
+
+    n = n_time.sum(0)
+    g = 2*box_length**3 / (particle_num*(particle_num-1)) * (n/len(time)) / (4*np.pi*r**2 * dr)
+
+    n_error = np.zeros(len(r))
+    b_range = np.arange(1, min([500, int(len(time)/2)]), dtype=int)
+    for i, r_i in enumerate(r):
+        print("\rCompute error : {}/{}".format(i+1, len(r)), end="")
+        n_error[i] = data_blocking(n_time[:,i], b_range)[0]
+
+    g_error = 2*box_length**3 / (particle_num*(particle_num-1)) * (n_error) / (4*np.pi*r**2 * dr)
+
+    print("")
+
+    return r, g, g_error
