@@ -11,11 +11,11 @@ import observables as obs
 ##########################################################
 
 # Input parameters
-particle_num = 4*(4**3) 
+particle_num = 4*(5**3) 
 dim = 3 
-lattice_const = 8 # (sigma)
-temperature = 1 # (K*kB/epsilon)
-temperature_error = 0.005 # error in the temperature when rescaling (K*kB/epsilon)
+lattice_const = 5*1.5471 # (sigma)
+temperature = 20 # (K*kB/epsilon)
+temperature_error = 0.1 # error in the temperature when rescaling (K*kB/epsilon)
 rescale_time = 0.1 # interval between rescalings
 
 run_time = 1 # sqrt(mass*sigma^2/epsilon)
@@ -24,7 +24,7 @@ algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
 simulation = ["equilibrium", "simulation"] # ["equilibrium", "simulation"]
-observables = ["specific_heat", "pressure"] # ["pair_correlation", "specific_heat", "pressure"]
+observables = ["specific_heat"] # ["pair_correlation", "specific_heat", "pressure"]
 plotting = [] # ["gif", "Evst"]
 
 ##########################################################
@@ -75,12 +75,12 @@ if "pair_correlation" in observables:
 
 if "specific_heat" in observables:
 	print("CALCULATING SPECIFIC HEAT PER ATOM...")
-	c, Ac = obs.specific_heat("output.csv")
+	c, Ac_autocorr, Ac_datablock = obs.specific_heat_error("output.csv")
 	eq_pos, eq_vel = sim.load_final_data("output_eq.csv")
 	temperature_eq = sim.temperature(eq_vel)
 	print("DONE")
 
-	print("specific heat per atom (T = {:0.5f}) = {:0.5f} +- {:0.5f}".format(temperature_eq, c, Ac))
+	print("specific heat per atom (T = {:0.5f}) = {:0.5f} +-autocorrelation {:0.5f} or +- databloking {:0.5f}".format(temperature_eq, c, Ac_autocorr, Ac_datablock))
 
 if "displacement" in observables:
 	print("CALCULATING MEAN-SQUARED DISPLACEMENT...")

@@ -4,6 +4,8 @@ from scipy import optimize
 import simulate as sim
 
 
+# FIRST FUNCTION BLOCK: OBSERVABLES WITHOUT ERROR
+
 def pair_correlation_function(file_name, dr, box_length, r_max=None):
     """
     Returns the pair correlation function averaged over time. 
@@ -74,18 +76,79 @@ def specific_heat(file_name):
 
     c = 1.5/(1-3*particle_num*r/2)
 
-    # Computation of the error
-    tau_mean_of_square_kin = correlation_time(total_kin**2, time[-1], num_tsteps)
-    tau_mean_kin = correlation_time(total_kin, time[-1], num_tsteps)
+    return c
 
-    error_mean_of_square_kin = np.sqrt(2*tau_mean_of_square_kin/num_tsteps*(mean_of_fourth_kin - mean_of_square_kin**2))
-    error_mean_of_kin = np.sqrt(2*tau_mean_kin/num_tsteps*(mean_of_square_kin - square_of_mean_kin))
+def diffusion(file_name):
+    """
+    Computes the diffussion constant D. 
 
-    Ac = np.sqrt( (particle_num*(1/square_of_mean_kin)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2)**2*error_mean_of_square_kin**2 + \
-         particle_num*mean_of_square_kin/square_of_mean_kin**(3/2)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2*error_mean_of_kin )
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
 
-    return c, Ac
+    Returns
+    -------
+    D : float
+        Diffussion constant
+    """
 
+    time, pos, _ = sim.load_data(file_name)
+    particle_num = pos.shape[0]
+
+    dist = (pos[-1] - pos[0])
+    dist = (dist*dist).sum(axis=1)**0.5
+    D = dist.sum()/particle_num
+
+    return D
+
+def pressure(file_name, T, box_length):
+    """
+    Computes the dimensionless pressure of the system.
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+    T : float
+        Temperature
+    box_length : float
+		Box size
+
+    Returns
+    -------
+    P : float
+        Dimensionless pressure
+    """
+    time, pos, vel = sim.load_data(file_name)
+
+    N = np.shape(pos)[1]
+    M = len(time)
+
+    BP_rho_instantenous = np.zeros(M)
+
+    for k, t in enumerate(time):
+        print("\r{}/{}".format(k+1, len(time)), end="")
+
+        rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
+
+        rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
+        rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
+
+        matrix = (1/(6*N*T))*24*(2/rel_dist**12-1/rel_dist**7)
+        matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
+
+        BP_rho_instantenous[k] = 1 + matrix.sum()
+
+    print("")
+
+    BP_rho =  np.average(BP_rho_instantenous)
+
+    P = BP_rho*T*N/box_length**3
+
+    return P
+
+# SECOND FUNCTION BLOCK: AUXILIARY FUNCTIONS FOR OBSERVABLES AND ERROR COMPUTATION
 
 def mean_squared_displacement(file_name, time_steps=None):
     """
@@ -118,32 +181,6 @@ def mean_squared_displacement(file_name, time_steps=None):
         Ax2[k] = dist.sum()/particle_num
 
     return time_steps, Ax2
-
-
-def diffusion(file_name):
-    """
-    Computes the diffussion constant D. 
-
-    Parameters
-    ----------
-    file_name : str
-        Name of the CSV file in which the data is stored
-
-    Returns
-    -------
-    D : float
-        Diffussion constant
-    """
-
-    time, pos, _ = sim.load_data(file_name)
-    particle_num = pos.shape[0]
-
-    dist = (pos[-1] - pos[0])
-    dist = (dist*dist).sum(axis=1)**0.5
-    D = dist.sum()/particle_num
-
-    return D
-
 
 def autocorrelation_function(data):
     """
@@ -236,10 +273,67 @@ def data_blocking(data, b_range):
 
     return error, sigma
 
+#---------------------------------------------------------
+# THIRD FUNCTION BLOCK: OBSERVABLES WITH ERROR COMPUTATION
+#---------------------------------------------------------
+
+def specific_heat_error(file_name):
+    """
+    Computes the specific heat per atom of a system. Gives the error with autocorrelation function method.
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+
+    Returns
+    -------
+    c : float
+        Specific heat per atom of the system
+    Ac_autocorr: float
+        Error of the specific heat per atom with the autocorrelation method
+    Ac_datablock: float
+        Error of the specific heat per atom with the datablocking method
+    """
+
+    time, pos, vel = sim.load_data(file_name)
+    num_tsteps = len(time) 
+    particle_num = np.shape(vel)[1] 
+
+    total_kin = (0.5*(vel**2).sum(2)).sum(1)
+    mean_kin = total_kin.sum()/num_tsteps
+    square_of_mean_kin = mean_kin**2
+    mean_of_square_kin = (total_kin**2).sum()/num_tsteps
+    mean_of_fourth_kin = (total_kin**4).sum()/num_tsteps
+    r = mean_of_square_kin/square_of_mean_kin - 1 # relative fluctuations in kinetic energy
+
+    c = 1.5/(1-3*particle_num*r/2)
+
+    # Computation of the error with the autocorrelation function method
+    tau_mean_of_square_kin = correlation_time(total_kin**2, time[-1], num_tsteps)
+    tau_mean_kin = correlation_time(total_kin, time[-1], num_tsteps)
+
+    err_mean_of_square_kin_autocorr = np.sqrt(2*tau_mean_of_square_kin/num_tsteps*(mean_of_fourth_kin - mean_of_square_kin**2))
+    err_mean_of_kin_autocorr = np.sqrt(2*tau_mean_kin/num_tsteps*(mean_of_square_kin - square_of_mean_kin))
+
+    Ac_autocorr = np.sqrt( (particle_num*(1/square_of_mean_kin)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2)**2*err_mean_of_square_kin_autocorr**2 + \
+         particle_num*mean_of_square_kin/square_of_mean_kin**(3/2)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2*err_mean_of_kin_autocorr )
+
+    # Computation of the error with the data-blocking method
+    b_range = np.arange(1, min([500, int(len(time)/2)]), dtype=int)
+
+    err_mean_of_square_kin_datablock = data_blocking(total_kin**2, b_range)[0]
+    err_mean_of_kin_datablock = data_blocking(total_kin, b_range)[0]
+
+    Ac_datablock = np.sqrt( (particle_num*(1/square_of_mean_kin)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2)**2*err_mean_of_square_kin_datablock**2 + \
+         particle_num*mean_of_square_kin/square_of_mean_kin**(3/2)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2*err_mean_of_kin_datablock )
+
+    
+    return c, Ac_autocorr, Ac_datablock 
 
 def error_pair_correlation_function(file_name, dr, box_length, r_max=None):
     """
-    Returns the pair correlation function averaged over time and its respective error. 
+    Returns the pair correlation function averaged over time and its respective error with the data blocking method. 
 
     Parameters
     ----------
@@ -289,48 +383,3 @@ def error_pair_correlation_function(file_name, dr, box_length, r_max=None):
 
     return r, g, g_error
 
-def pressure(file_name, T, box_length):
-    """
-    Computes the dimensionless pressure of the system.
-
-    Parameters
-    ----------
-    file_name : str
-        Name of the CSV file in which the data is stored
-    T : float
-        Temperature
-    box_length : float
-		Box size
-
-    Returns
-    -------
-    P : float
-        Dimensionless pressure
-    """
-    time, pos, vel = sim.load_data(file_name)
-
-    N = np.shape(pos)[1]
-    M = len(time)
-
-    BP_rho_instantenous = np.zeros(M)
-
-    for k, t in enumerate(time):
-        print("\r{}/{}".format(k+1, len(time)), end="")
-
-        rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
-
-        rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
-        rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
-
-        matrix = (1/(6*N*T))*24*(2/rel_dist**12-1/rel_dist**7)
-        matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
-
-        BP_rho_instantenous[k] = 1 + matrix.sum()
-
-    print("")
-
-    BP_rho =  np.average(BP_rho_instantenous)
-
-    P = BP_rho*T*N/box_length**3
-
-    return P
