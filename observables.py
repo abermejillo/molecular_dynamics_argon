@@ -2,6 +2,7 @@ import numpy as np
 from scipy import optimize
 
 import simulate as sim
+import matplotlib.pyplot as plt
 
 
 def pair_correlation_function(file_name, dr, box_length, r_max=None):
@@ -69,14 +70,26 @@ def specific_heat(file_name, starting_time_step=0):
     vel = vel[starting_time_step:,:,:]
     num_tsteps = len(time) 
     particle_num = np.shape(vel)[1] 
-    square_of_mean_kin = (sim.kinetic_energy(vel)/num_tsteps)**2
-    mean_of_square_kin = (((0.5*(vel**2).sum(2)).sum(1))**2).sum()/num_tsteps
-    
-    r = (mean_of_square_kin - square_of_mean_kin)/square_of_mean_kin # relative fluctuations in kinetic energy
+    total_kin = (0.5*(vel**2).sum(2)).sum(1)
+    mean_kin = total_kin.sum()/num_tsteps
+    square_of_mean_kin = mean_kin**2
+    mean_of_square_kin = (total_kin**2).sum()/num_tsteps
+    mean_of_fourth_kin = (total_kin**4).sum()/num_tsteps
+    r = mean_of_square_kin/square_of_mean_kin - 1 # relative fluctuations in kinetic energy
 
     c = 1.5/(1-3*particle_num*r/2)
 
-    return c
+    # Computation of the error
+    tau_mean_of_square_kin = correlation_time(total_kin**2, time[-1], num_tsteps)
+    tau_mean_kin = correlation_time(total_kin, time[-1], num_tsteps)
+
+    error_mean_of_square_kin = np.sqrt(2*tau_mean_of_square_kin/num_tsteps*(mean_of_fourth_kin - mean_of_square_kin**2))
+    error_mean_of_kin = np.sqrt(2*tau_mean_kin/num_tsteps*(mean_of_square_kin - square_of_mean_kin))
+
+    Ac = np.sqrt( (particle_num*(1/square_of_mean_kin)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2)**2*error_mean_of_square_kin**2 + \
+         particle_num*mean_of_square_kin/square_of_mean_kin**(3/2)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2*error_mean_of_kin )
+
+    return c, Ac
 
 
 def mean_squared_displacement(file_name, time_steps=None):
@@ -114,7 +127,7 @@ def mean_squared_displacement(file_name, time_steps=None):
 
 def diffusion(file_name):
     """
-    Returns the mean-squared displacement as a function of time. 
+    Computes the diffussion constant D. 
 
     Parameters
     ----------
@@ -162,6 +175,35 @@ def autocorrelation_function(data):
 
     return Xa
 
+def correlation_time(data, runtime, num_tsteps):
+    """
+    Returns the autocorrelation time for a given data set evenly distributed along the simulation runtime. 
+
+    Parameters
+    ----------
+    data : np.ndarray(len(time))
+        Variable as a function of time
+    runtime : float
+        Runtime of the simulation
+    num_tsteps : float
+        Number of timesteps in which the simulation is divided.
+
+    Returns
+    -------
+    tau : float
+        Autocorrelation time for the given variable.
+    """
+
+    Xa = autocorrelation_function(data)
+    time = np.linspace(0, runtime, num = num_tsteps)
+    plt.plot(time[:-1],Xa)
+    plt.show()
+    function = lambda x,tau: np.exp(-tau*x) # function for fitting the error
+    num_tsteps_in_01s = int(num_tsteps/runtime*0.1 )
+    popt, _ = optimize.curve_fit(function,  time[:num_tsteps_in_01s],  Xa[:num_tsteps_in_01s])
+    tau = popt[0]
+
+    return tau
 
 def data_blocking(data, b_range):
     """

@@ -13,19 +13,19 @@ import observables as obs
 # Input parameters
 particle_num = 4*(5**3) 
 dim = 3 
-lattice_const = 1.54478 # [\sigma]
-temperature = 10 # [\epsilon/kB]
-temperature_error = 0.05 # maximum error in the temperature when rescaling [\epsilon/k_B]
+lattice_const = 3*1.54478 # [\sigma]
+temperature = 25 # [\epsilon/kB]
+temperature_error = 0.1 # maximum error in the temperature when rescaling [\epsilon/k_B]
 rescale_time = 0.1 # interval between rescalings [(m \sigma^2 / \epsilon )^{1/2}]
 
-run_time = 2 # [\sqrt(mass*\sigma^2/\epsilon)]
-num_tsteps = 2000 
+run_time = 1 # [\sqrt(mass*\sigma^2/\epsilon)]
+num_tsteps = 900 
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
-simulation = [] # ["equilibrium", "simulation"]
-observables = [] # ["pair_correlation", "specific_heat", "displacement", "diffusion"]
-plotting = ["Evst"] # ["gif", "Evst"]
+simulation = ["equilibrium", "simulation"] # ["equilibrium", "simulation"]
+observables = ["specific_heat"] # ["pair_correlation", "specific_heat", "displacement", "diffusion"]
+plotting = [] # ["gif", "Evst"]
 
 ##########################################################
 
@@ -75,12 +75,12 @@ if "pair_correlation" in observables:
 
 if "specific_heat" in observables:
 	print("CALCULATING SPECIFIC HEAT PER ATOM...")
-	c = obs.specific_heat("output.csv")
+	c, Ac = obs.specific_heat("output.csv")
 	eq_pos, eq_vel = sim.load_final_data("output_eq.csv")
 	temperature_eq = sim.temperature(eq_vel)
 	print("DONE")
 
-	print("specific heat per atom (T = {:0.5f}) = {:0.3f}".format(temperature_eq, c))
+	print("specific heat per atom (T = {:0.5f}) = {:0.5f} +- {:0.5f}".format(temperature_eq, c, Ac))
 
 if "displacement" in observables:
 	print("CALCULATING MEAN-SQUARED DISPLACEMENT...")
