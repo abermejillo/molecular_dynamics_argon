@@ -2,7 +2,6 @@ import numpy as np
 from scipy import optimize
 
 import simulate as sim
-import matplotlib.pyplot as plt
 
 
 def pair_correlation_function(file_name, dr, box_length, r_max=None):
@@ -47,7 +46,7 @@ def pair_correlation_function(file_name, dr, box_length, r_max=None):
     return r, g
 
 
-def specific_heat(file_name, starting_time_step=0):
+def specific_heat(file_name):
     """
     Computes the specific heat per atom of a system.
 
@@ -55,8 +54,6 @@ def specific_heat(file_name, starting_time_step=0):
     ----------
     file_name : str
         Name of the CSV file in which the data is stored
-    starting_time_step : int
-        Number of time steps to skip from the beginning of the file_name
 
     Returns
     -------
@@ -65,11 +62,9 @@ def specific_heat(file_name, starting_time_step=0):
     """
 
     time, pos, vel = sim.load_data(file_name)
-    time = time[starting_time_step:]
-    pos = pos[starting_time_step:,:,:]
-    vel = vel[starting_time_step:,:,:]
     num_tsteps = len(time) 
     particle_num = np.shape(vel)[1] 
+
     total_kin = (0.5*(vel**2).sum(2)).sum(1)
     mean_kin = total_kin.sum()/num_tsteps
     square_of_mean_kin = mean_kin**2
@@ -195,12 +190,10 @@ def correlation_time(data, runtime, num_tsteps):
     """
 
     Xa = autocorrelation_function(data)
-    time = np.linspace(0, runtime, num = num_tsteps)
-    plt.plot(time[:-1],Xa)
-    plt.show()
-    function = lambda x,tau: np.exp(-tau*x) # function for fitting the error
-    num_tsteps_in_01s = int(num_tsteps/runtime*0.1 )
-    popt, _ = optimize.curve_fit(function,  time[:num_tsteps_in_01s],  Xa[:num_tsteps_in_01s])
+    time = np.arange(num_tsteps)
+    N_max = np.where(np.diff(Xa) > 0)[0][0] # find first point that Xa increases
+    function = lambda x,tau: np.exp(-x/tau) # function for fitting the error
+    popt, _ = optimize.curve_fit(function,  time[:N_max],  Xa[:N_max])
     tau = popt[0]
 
     return tau
@@ -334,6 +327,7 @@ def pressure(file_name, T, box_length):
 
         BP_rho_instantenous[k] = 1 + matrix.sum()
 
+    print("")
 
     BP_rho =  np.average(BP_rho_instantenous)
 
