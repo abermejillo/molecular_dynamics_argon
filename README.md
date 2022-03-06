@@ -27,7 +27,7 @@ Open `main.py` and specify the input parameters:
     - `algorithm_method` : algorithm used to calculate the temporal evolution (`verlet` or `euler`)
     - `simulation` : list of steps to do `["equilibrium", "simulation"]`
 - Post-processing of the simulation
-    - `observables` : list of observables to calculate `["pair_correlation", "specific_heat", "displacement", "diffusion"]`
+    - `observables` : list of observables to calculate `["pair_correlation", "specific_heat", "displacement", "diffusion", "pressure"]`
     - `plotting` : list of plots to perform `["gif", "Evst"]`
 
 For a more detailed information of the available plots (including e.g. histogram of velocities and plots of observables), see `plotting.py`. 
