@@ -11,20 +11,20 @@ import observables as obs
 ##########################################################
 
 # Input parameters
-particle_num = 4*(5**3) 
+particle_num = 4*(4**3) 
 dim = 3 
-lattice_const = 3*1.54478 # [\sigma]
-temperature = 25 # [\epsilon/kB]
-temperature_error = 0.1 # maximum error in the temperature when rescaling [\epsilon/k_B]
-rescale_time = 0.1 # interval between rescalings [(m \sigma^2 / \epsilon )^{1/2}]
+lattice_const = 8 # (sigma)
+temperature = 1 # (K*kB/epsilon)
+temperature_error = 0.005 # error in the temperature when rescaling (K*kB/epsilon)
+rescale_time = 0.1 # interval between rescalings
 
-run_time = 1 # [\sqrt(mass*\sigma^2/\epsilon)]
-num_tsteps = 900 
+run_time = 1 # sqrt(mass*sigma^2/epsilon)
+num_tsteps = 750 
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
 simulation = ["equilibrium", "simulation"] # ["equilibrium", "simulation"]
-observables = ["specific_heat"] # ["pair_correlation", "specific_heat", "displacement", "diffusion"]
+observables = ["specific_heat", "pressure"] # ["pair_correlation", "specific_heat", "pressure"]
 plotting = [] # ["gif", "Evst"]
 
 ##########################################################
@@ -93,3 +93,11 @@ if "diffusion" in observables:
 	D = obs.diffusion("output.csv")
 	print("Diffusion coefficient = {0:0.5f}".format(D))
 	print("DONE")
+
+if "pressure" in observables:
+	print("CALCULATING PRESSURE")
+	eq_pos, eq_vel = sim.load_final_data("output.csv")
+	temperature_eq = sim.temperature(eq_vel)
+	P_dimensionless = obs.pressure("output.csv", temperature_eq, box_length)
+	print("DONE")
+	print("Pressure (T = {:0.5f}) = {:0.3f}".format(temperature_eq, P_dimensionless))

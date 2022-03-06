@@ -295,3 +295,48 @@ def error_pair_correlation_function(file_name, dr, box_length, r_max=None):
     print("")
 
     return r, g, g_error
+
+def pressure(file_name, T, box_length):
+    """
+    Computes the dimensionless pressure of the system.
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+    T : float
+        Temperature
+    box_length : float
+		Box size
+
+    Returns
+    -------
+    P : float
+        Dimensionless pressure
+    """
+    time, pos, vel = sim.load_data(file_name)
+
+    N = np.shape(pos)[1]
+    M = len(time)
+
+    BP_rho_instantenous = np.zeros(M)
+
+    for k, t in enumerate(time):
+        print("\r{}/{}".format(k+1, len(time)), end="")
+
+        rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
+
+        rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
+        rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
+
+        matrix = (1/(6*N*T))*24*(2/rel_dist**12-1/rel_dist**7)
+        matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
+
+        BP_rho_instantenous[k] = 1 + matrix.sum()
+
+
+    BP_rho =  np.average(BP_rho_instantenous)
+
+    P = BP_rho*T*N/box_length**3
+
+    return P
