@@ -98,9 +98,9 @@ if "pressure" in observables:
 	print("CALCULATING PRESSURE")
 	eq_pos, eq_vel = sim.load_final_data("output.csv")
 	temperature_eq = sim.temperature(eq_vel)
-	P_dimensionless = obs.pressure("output.csv", temperature_eq, box_length)
+	P, AP_autocorr, AP_datablock = obs.pressure_error("output.csv", temperature_eq, box_length)
 	print("DONE")
-	print("Pressure (T = {:0.5f}) = {:0.3f}".format(temperature_eq, P_dimensionless))
+
 
 #----------------------------------------------------------------------------
 
@@ -132,3 +132,4 @@ for i in range(15):
 # ef.write("num_points={} \n".format(len(temp_var))) # header
 plt.errorbar(temp_var, c_variation, yerr = c_error,marker = ".")
 plt.show()
+print("Pressure (T = {:0.5f}) = {:0.5f} +-autocorrelation {:0.5f} or +- databloking {:0.5f}".format(temperature_eq, P, AP_autocorr, AP_datablock))
