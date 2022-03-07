@@ -13,18 +13,18 @@ import observables as obs
 # Input parameters
 particle_num = 4*(5**3) 
 dim = 3 
-lattice_const = 5*1.5471 # (sigma)
-temperature = 20 # (K*kB/epsilon)
-temperature_error = 0.1 # error in the temperature when rescaling (K*kB/epsilon)
+lattice_const = 2*1.5471 # [\sigma]
+temperature = 5 # [\epsilon/Kb]
+temperature_error = 0.01 # error in the temperature when rescaling [\epsilon/KB]
 rescale_time = 0.1 # interval between rescalings
 
-run_time = 1 # sqrt(mass*sigma^2/epsilon)
-num_tsteps = 750 
+run_time = 1 # sqrt(mass*\sigma^2/\epsilon)
+num_tsteps = 500 
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
-simulation = ["equilibrium", "simulation"] # ["equilibrium", "simulation"]
-observables = ["specific_heat"] # ["pair_correlation", "specific_heat", "pressure"]
+simulation = [] # ["equilibrium", "simulation"]
+observables = [] # ["pair_correlation", "specific_heat", "pressure"]
 plotting = [] # ["gif", "Evst"]
 
 ##########################################################
@@ -101,3 +101,34 @@ if "pressure" in observables:
 	P_dimensionless = obs.pressure("output.csv", temperature_eq, box_length)
 	print("DONE")
 	print("Pressure (T = {:0.5f}) = {:0.3f}".format(temperature_eq, P_dimensionless))
+
+#----------------------------------------------------------------------------
+
+# On construction! Loop to obtain cv in different simulation setups
+
+temp_var = []
+c_variation = []
+c_error = []
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.set_xlabel("temperature $[\epsilon/K_B]$")
+ax.set_ylabel("$c_v$ $[K_B]$")
+for i in range(15):
+	print("Computing specific heat step number", i)
+	temperature = 0.85 + 0.15*i
+	try:
+		init_pos, box_length = sim.fcc_lattice(particle_num, lattice_const)
+		eq_reached = sim.get_equilibrium(init_pos, init_vel, num_tsteps, run_time/num_tsteps, box_length, temperature, "output_eq.csv", method=algorithm_method, resc_thr=[temperature_error, rescale_time])
+		eq_pos, eq_vel = sim.load_final_data("output_eq.csv")
+		temperature_eq = sim.temperature(eq_vel)
+		sim.simulate(eq_pos, eq_vel, num_tsteps, run_time/num_tsteps, box_length, "output.csv", method=algorithm_method)
+		c, Ac_autocorr, Ac_datablock = obs.specific_heat_error("output.csv")
+		c_variation.append(c)
+		c_error.append(Ac_autocorr)
+		temp_var.append(temperature_eq)
+	except:
+		print("One step was skipped")
+# f = open(file_name, "w")
+# ef.write("num_points={} \n".format(len(temp_var))) # header
+plt.errorbar(temp_var, c_variation, yerr = c_error,marker = ".")
+plt.show()
