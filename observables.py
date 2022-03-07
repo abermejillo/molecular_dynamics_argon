@@ -3,8 +3,9 @@ from scipy import optimize
 
 import simulate as sim
 
-
+#---------------------------------------------------------
 # FIRST FUNCTION BLOCK: OBSERVABLES WITHOUT ERROR
+#---------------------------------------------------------
 
 def pair_correlation_function(file_name, dr, box_length, r_max=None):
     """
@@ -78,6 +79,7 @@ def specific_heat(file_name):
 
     return c
 
+
 def diffusion(file_name):
     """
     Computes the diffussion constant D. 
@@ -101,6 +103,7 @@ def diffusion(file_name):
     D = dist.sum()/particle_num
 
     return D
+
 
 def pressure(file_name, T, box_length):
     """
@@ -148,7 +151,6 @@ def pressure(file_name, T, box_length):
 
     return P
 
-# SECOND FUNCTION BLOCK: AUXILIARY FUNCTIONS FOR OBSERVABLES AND ERROR COMPUTATION
 
 def mean_squared_displacement(file_name, time_steps=None):
     """
@@ -182,6 +184,11 @@ def mean_squared_displacement(file_name, time_steps=None):
 
     return time_steps, Ax2
 
+
+#---------------------------------------------------------
+# SECOND FUNCTION BLOCK: AUXILIARY FUNCTIONS FOR OBSERVABLES AND ERROR COMPUTATION
+#---------------------------------------------------------
+
 def autocorrelation_function(data):
     """
     Returns the autocorrelation function for a given variable as a function of time. 
@@ -206,6 +213,7 @@ def autocorrelation_function(data):
                 (np.sqrt((N-t)*(data[:n]**2).sum() - (data[:n].sum())**2) * np.sqrt((N-t)*(data[t:n+t]**2).sum() - (data[t:n+t].sum())**2))
 
     return Xa
+
 
 def correlation_time(data, runtime, num_tsteps):
     """
@@ -234,6 +242,7 @@ def correlation_time(data, runtime, num_tsteps):
     tau = popt[0]
 
     return tau
+
 
 def data_blocking(data, b_range):
     """
@@ -272,6 +281,7 @@ def data_blocking(data, b_range):
         error = np.max(sigma)
 
     return error, sigma
+
 
 #---------------------------------------------------------
 # THIRD FUNCTION BLOCK: OBSERVABLES WITH ERROR COMPUTATION
@@ -327,13 +337,13 @@ def specific_heat_error(file_name):
 
     Ac_datablock = np.sqrt( (particle_num*(1/square_of_mean_kin)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2)**2*err_mean_of_square_kin_datablock**2 + \
          particle_num*mean_of_square_kin/square_of_mean_kin**(3/2)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2*err_mean_of_kin_datablock )
-
     
     return c, Ac_autocorr, Ac_datablock 
 
-def error_pair_correlation_function(file_name, dr, box_length, r_max=None):
+
+def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
     """
-    Returns the pair correlation function averaged over time and its respective error with the data blocking method. 
+    Returns the pair correlation function averaged over time and its respective error. 
 
     Parameters
     ----------
@@ -352,15 +362,18 @@ def error_pair_correlation_function(file_name, dr, box_length, r_max=None):
         Distance between pairs of particles
     g : np.ndarray(int(r_max/dr)+1)
         Pair correlation function as a function of r
-    g_error : np.ndarray(int(r_max/dr)+1)
-        Error of the pair correlation function as a function of r
+    Ag_datablock : np.ndarray(int(r_max/dr)+1)
+        Error of the pair correlation function as a function of r using data blocking method
+    Ag_autocorr : np.ndarray(int(r_max/dr)+1)
+        Error of the pair correlation function as a function of r using autocorrelation method
     """
 
     if r_max is None: r_max = box_length
     time, pos, _ = sim.load_data(file_name)
-    particle_num = pos.shape[0]
+    particle_num = pos.shape[1]
+    num_tsteps = len(time)
     r = np.arange(dr, r_max+dr, dr) # start != 0, because g = 1/0 is not defined
-    n_time = np.zeros((len(time), len(r)))
+    n_time = np.zeros((num_tsteps, len(r)))
 
     for k, t in enumerate(time):
         print("\rGet data : {}/{}".format(k+1, len(time)), end="")
@@ -369,19 +382,33 @@ def error_pair_correlation_function(file_name, dr, box_length, r_max=None):
             n_time[k,i] = len(np.where((rel_dist >= r_i) & (rel_dist < r_i + dr))[0])
 
     n = n_time.sum(0)
-    g = 2*box_length**3 / (particle_num*(particle_num-1)) * (n/len(time)) / (4*np.pi*r**2 * dr)
+    g = 2*box_length**3 / (particle_num*(particle_num-1)) * (n/num_tsteps) / (4*np.pi*r**2 * dr)
 
+    # Computation of the error with the data-blocking method
     n_error = np.zeros(len(r))
     b_range = np.arange(1, min([500, int(len(time)/2)]), dtype=int)
     for i, r_i in enumerate(r):
-        print("\rCompute error : {}/{}".format(i+1, len(r)), end="")
+        print("\rCompute error (data blocking): {}/{}".format(i+1, len(r)), end="")
         n_error[i] = data_blocking(n_time[:,i], b_range)[0]
 
-    g_error = 2*box_length**3 / (particle_num*(particle_num-1)) * (n_error) / (4*np.pi*r**2 * dr)
+    Ag_datablock = 2*box_length**3 / (particle_num*(particle_num-1)) * (n_error) / (4*np.pi*r**2 * dr)
+
+    # Computation of the error with the autocorrelation function method
+    n_error = np.zeros(len(r))
+    for i, r_i in enumerate(r):
+        print("\rCompute error (autocorrelation): {}/{}".format(i+1, len(r)), end="")
+        if n_time[:,i].sum() != 0: # if all of them are zeros, it is not possible to calculate autocorrelation function
+            tau = correlation_time(n_time[:,i], time[-1], num_tsteps)
+            mean = np.average(n_time[:,i])
+            mean_squared = np.average(n_time[:,i]**2)
+            n_error[i] = np.sqrt(2*tau/num_tsteps*(mean_squared - mean**2))
+
+    Ag_autocorr = 2*box_length**3 / (particle_num*(particle_num-1)) * (n_error) / (4*np.pi*r**2 * dr)
 
     print("")
 
-    return r, g, g_error
+    return r, g, Ag_datablock, Ag_autocorr
+
 
 def pressure_error(file_name, T, box_length):
     """
