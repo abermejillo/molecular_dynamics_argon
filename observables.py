@@ -104,7 +104,7 @@ def diffusion(file_name):
 
 def pressure(file_name, T, box_length):
     """
-    Computes the dimensionless pressure of the system.
+    Computes the pressure of the system.
 
     Parameters
     ----------
@@ -118,14 +118,14 @@ def pressure(file_name, T, box_length):
     Returns
     -------
     P : float
-        Dimensionless pressure
+        Pressure
     """
     time, pos, vel = sim.load_data(file_name)
 
     N = np.shape(pos)[1]
     M = len(time)
 
-    BP_rho_instantenous = np.zeros(M)
+    second_term_instantenous = np.zeros(M)
 
     for k, t in enumerate(time):
         print("\r{}/{}".format(k+1, len(time)), end="")
@@ -138,11 +138,11 @@ def pressure(file_name, T, box_length):
         matrix = (1/(6*N*T))*24*(2/rel_dist**12-1/rel_dist**7)
         matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
 
-        BP_rho_instantenous[k] = 1 + matrix.sum()
+        second_term_instantenous[k] = matrix.sum()
 
     print("")
 
-    BP_rho =  np.average(BP_rho_instantenous)
+    BP_rho =  1+np.average(second_term_instantenous)
 
     P = BP_rho*T*N/box_length**3
 
@@ -383,3 +383,67 @@ def error_pair_correlation_function(file_name, dr, box_length, r_max=None):
 
     return r, g, g_error
 
+def pressure_error(file_name, T, box_length):
+    """
+    Computes the pressure of the system. Gives the errors computed with the
+    autocorrelation function and the data-blocking method
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+    T : float
+        Temperature
+    box_length : float
+		Box size
+
+    Returns
+    -------
+    P : float
+        Pressure
+    AP_autocorr : float
+        Error computed with the autocorrelation function
+    AP_data_block : float
+        Error computed with the data-blocking method
+    """
+
+    # Calculation of pressure
+    time, pos, vel = sim.load_data(file_name)
+
+    N = np.shape(pos)[1]
+    M = len(time)
+
+    second_term_instantenous = np.zeros(M)
+
+    for k, t in enumerate(time):
+        print("\r{}/{}".format(k+1, len(time)), end="")
+
+        rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
+
+        rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
+        rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
+
+        matrix = (1/(6*N*T))*24*(2/rel_dist**12-1/rel_dist**7)
+        matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
+
+        second_term_instantenous[k] = matrix.sum()
+
+    print("")
+
+    second_term_average = np.average(second_term_instantenous)
+    second_term_squared_average = np.average(second_term_instantenous**2)
+    BP_rho =  1+second_term_average
+
+    P = BP_rho*T*N/box_length**3
+
+    # Computation of the error with the autocorrelation function method
+    tau_second_term = correlation_time(second_term_instantenous, time[-1], M)
+    sigma_second_term  = np.sqrt(2*tau_second_term*(second_term_squared_average-second_term_average**2)/M)
+    AP_autocorr = N*T*sigma_second_term/box_length**3 # Through propagation of errors
+
+    # Computation of the error with the data-blocking method
+    b_range = np.arange(1, min([500, int(len(time)/2)]), dtype=int)
+    error_second_term = data_blocking(second_term_instantenous, b_range)[0]
+    AP_data_block = N*T*error_second_term/box_length**3 # Through propagation of errors
+
+    return P, AP_autocorr, AP_data_block
