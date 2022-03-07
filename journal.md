@@ -141,9 +141,9 @@ All in all, it is clear that we have achieved all milestones and obtained all re
 
 ### Progress 
 
-First, we will briefly comment how the tasks from the bulletlist have been performed and by who. 
+First, we will briefly comment how the tasks from the bulletlist have been performed and by whom. 
 
-1. @mserraperalta improved the [FCC lattice](ba0bff1808cd77a76a5e20e0302df5c13dd83f8a) and changed it's funcitonality so that the box is completely filled .
+1. @mserraperalta improved the [FCC lattice](ba0bff1808cd77a76a5e20e0302df5c13dd83f8a) and changed it's funcitonality so that the box is completely filled.
 2. @dbedialaunetar plotted the [comparison of energy conservation](7a260d04f6b65d94c4cce513cd282ae7f5161976) with the two algorithms.
 3. @abermejillo implemented the [initialization of the particles velocities](f44ddcde776c63d3378df038a3600f2d4896ae9c) according to a gaussian distribution and analysed it was correct by computing a [density probability function](dbe60d9bb168aa7b3fb4418ac4043e082581a361).
 4. @mserraperalta implemented the [rescaling of the velocities](9e211f71a1801dac2880b04aa339a47baf336905) until the system is thermalised to a given temperature
@@ -208,6 +208,56 @@ So far, this approach does not give better results than our previous code. We mi
 3. Check that our observable implementations are consistent with literature (@mserraperalta, @abermejillo, @dbedialaunetar)
 4. Start computing errors, for example, the error for the specific heat (@abermejillo)
 5. Start structuring the report: theoretical background, methods... (@mserraperalta, @abermejillo, @dbedialaunetar)
+
+### Progress 
+
+First, we will briefly comment how the tasks from the bulletlist have been performed and by whom. 
+
+1. @mserraperalta implemented the [mean-squared displacement](ef2fc08806559e941f7110b48855a7325fa81c7e) the [diffusion function, and the plotting of the mean-squared displacement](a2d174fd8599b09a13c827c196554f40a4610a89).
+2. @dbedialaunetar implemented the [pressure function](c55009bf0d1be6af57d1a39256257770cffd7386).
+3. @mserraperalta added [plots of the pair correlation function](bb5077a34a52480379adb656d4d76a53a1f669c7), @abermejillo added plots of the specific heat with respect to system parameters and @dbedialaunetar compared the result of the pressure with that given by the ideal gas law. The results will be discussed below.
+4. @mserraperalta added the [autocorrelation function](51c035f3a428b63e21af1af4902c0a2aab185784), [data-blocking function](93ccd45f0aa38ed576b1c4e35991b3204cbe8397) and the [pair-correlation function with both errors](d5f8946902a9f84c6129335859c64d7101154634). @abermejillo added the [correlation-time function](ad68699e09161bb3f8586845b41a5193fbfe0ab3) and the specific heat function with both errors ([autocorrelation](ad68699e09161bb3f8586845b41a5193fbfe0ab3) and [data-blocking](dcd8992c91321f1d758b8e28d8a914a2fbf2686a)). @dbedialaunetar added the [pressure function with both errors](569677e70f4cacdc2e6507a1d84d73b8e770aee9).
+5. @mserraperalta, @abermejillo and @dbedialaunetar discussed some of the results that should go into the report.
+
+Along the way we did numerous commits that correspond to solving mistakes and typos, including functionalities for plotting and improve structure, ease of use and readability of the code.
+
+**Results and comments**
+
+First, we analysed the rescaling of the velocities. Here, we plot the kinetic energy of the system while it is undergoing the rescaling process.
+
+![alt text](results/W4_rescaling.png)
+
+The initial and final velocity distributions are
+
+Before rescaling process ($`T=10.020`$)             |  After rescaling process ($`T=10.016`$)
+:-------------------------:|:-------------------------:
+![alt text](results/W4_velocities_before_rescaling.png) |  ![alt text](results/W4_velocities_after_rescaling.png)
+
+Therefore, we obtain a thermal equilibrium configuration with the desired temperature. Moreover, the equilibrium temperature can be tuned to arbitrary precision (the more precision, the longer the rescaling process).
+
+Next, we plot the specific heat with respect to temperature (for a lattice constant of $`2\cdot 1.5471 \sigma `$)
+
+![alt text](results/W4_specific_heat_time.png)
+
+We see how for large temperatures, the specific heat per atom tends towards $`1.5`$, which corresponds to the $`\frac{3}{2}k_B T`$ that is found for a free particle gas, due to the equipartition theorem. On the other side of the graph, we see that the specific heat "hovers" around $`3`$, which corresponds to the $`3 k_B T`$ of the equipartition theorem, due to the additional vibrational degrees of freedom. 
+
+We are able to consistently get a specific heat of $`1.5`$ with a small error for the situations where argon is a gas. For instance, for $`T=1`$, lattice_constant$`=8.25`$ and $`N=500`$ particles, we obtain the following specific heat
+
+$`c_v = 1.500\pm 0.005,`$
+
+where the error was calculated using the autocorrelation function. However, we still have not found a region for solid argon, where the specific heat gives $`3`$ consistently. For this same simulation we find a dimensionless pressure
+
+$`\frac{\beta P}{\rho} = 1.000\pm 0.005,`$
+
+which further supports that Argon is behaving as a gas in this configuration.
+
+We also obtained three plots of the pair correlation function.
+
+![alt text](results/W4_pair_correlation_function_states.png)
+
+If we compare these functions to the ones provided in [Wikipedia](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Simulated_Radial_Distribution_Functions_for_Solid%2C_Liquid%2C_and_Gaseous_Argon.svg/425px-Simulated_Radial_Distribution_Functions_for_Solid%2C_Liquid%2C_and_Gaseous_Argon.svg.png?20151030020319), we can see how our plots correspond to a solid, liquid and gas, respectively.
+
+These results suggest that our simulation is going in the right direction. However, we still need to solve some relatively big discrepancies that we have found between the errors computed with the autocorrelation function and with the data-blocking method. Furthermore, we have to carry out a more extensive comparison of our results with literature, and understand if our solid and liquid argon are behaving as they should.
 
 
 (due 7 March 2022, 23:59)
