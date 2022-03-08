@@ -253,7 +253,7 @@ which further supports that Argon is behaving as a gas in this configuration.
 
 We also obtained three plots of the pair correlation function.
 
-![alt text](results/W4_pair_correlation_function_states.png)
+![alt text](results/W4_pair_correlation_function_state.png)
 
 If we compare these functions to the ones provided in [Wikipedia](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Simulated_Radial_Distribution_Functions_for_Solid%2C_Liquid%2C_and_Gaseous_Argon.svg/425px-Simulated_Radial_Distribution_Functions_for_Solid%2C_Liquid%2C_and_Gaseous_Argon.svg.png?20151030020319), we can see how our plots correspond to a solid, liquid and gas, respectively.
 
