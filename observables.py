@@ -96,11 +96,11 @@ def diffusion(file_name):
     """
 
     time, pos, _ = sim.load_data(file_name)
-    particle_num = pos.shape[0]
+    particle_num = pos.shape[1]
 
     dist = (pos[-1] - pos[0])
-    dist = (dist*dist).sum(axis=1)**0.5
-    D = (dist.sum()/particle_num)/(6*time[-1])
+    dist_squared = (dist*dist).sum(axis=1)
+    D = (np.average(dist_squared))/(6*time[-1])
 
     return D
 
@@ -474,3 +474,38 @@ def pressure_error(file_name, T, box_length):
     AP_data_block = N*T*error_second_term/box_length**3 # Through propagation of errors
 
     return P, AP_autocorr, AP_data_block
+
+
+def diffusion_error(file_name):
+    """
+    Computes the diffussion constant D and gives its error computed
+    from the standard deviation of the mean square displacement.
+
+    Parameters
+    ----------
+    file_name : str
+        Name of the CSV file in which the data is stored
+
+    Returns
+    -------
+    D : float
+        Diffusion constant
+    AD : float
+        Erro of the diffusion constant
+    """
+
+    # Calculation of diffusion coefficient
+
+    time, pos, _ = sim.load_data(file_name)
+    particle_num = pos.shape[1]
+
+    dist = (pos[-1] - pos[0])
+    dist_squared = (dist*dist).sum(axis=1)
+    D = (np.average(dist_squared))/(6*time[-1])
+
+    # Computation of the error
+    mean_square_dist_squared = np.average(dist_squared*dist_squared)
+    square_mean_dist_squared = np.average(dist_squared)**2
+    AD = np.sqrt( (mean_square_dist_squared - square_mean_dist_squared) / particle_num )/(6*time[-1])
+
+    return D, AD
