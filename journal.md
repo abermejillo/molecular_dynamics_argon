@@ -201,7 +201,7 @@ So far, this approach does not give better results than our previous code. We mi
 
 ## Week 4
 
-# Bullet list
+### Bullet list
 
 1. Implement diffusion (@mserraperalta)
 2. Implement pressure (@dbedialaunetar)
@@ -264,4 +264,15 @@ These results suggest that our simulation is going in the right direction. Howev
 
 
 ## Week 5
+
+### Bullet list
+
+- Test error implementation with data with known correlation time @mserraperalta
+- Compute the error of the diffusion constant @dbedialaunetar
+- Make a general update of the documentation and organize files if needed @abermejillo @mserraperalta @dbedialaunetar
+- Make the final plan of the simulations that will go into the report @mserraperalta @dbedialaunetar @abermejillo
+- Study the efficiency of the final code @abermejillo 
+- Search for known values of different observables (and errors if possible) in the literature: Pair correlation function @mserraperalta, pressure @dbedialaunetar, specific heat and diffusion @abermejillo
+- Start introducing ideas, figures and references into the final report @mserraperalta @dbedialaunetar @abermejillo
+
 (due 14 March 2022, 23:59)
