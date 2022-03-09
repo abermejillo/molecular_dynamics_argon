@@ -90,8 +90,8 @@ if "displacement" in observables:
 
 if "diffusion" in observables:
 	print("CALCULATING DIFFUSION COEFFICIENT...")
-	D = obs.diffusion("output.csv")
-	print("Diffusion coefficient = {0:0.5f}".format(D))
+	D, AD = obs.diffusion_error("output.csv")
+	print("Diffusion coefficient = {:0.5f} +- {:0.5f}".format(D, AD))
 	print("DONE")
 
 if "pressure" in observables:
