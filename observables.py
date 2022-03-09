@@ -100,7 +100,7 @@ def diffusion(file_name):
 
     dist = (pos[-1] - pos[0])
     dist = (dist*dist).sum(axis=1)**0.5
-    D = dist.sum()/particle_num
+    D = (dist.sum()/particle_num)/(6*time[-1])
 
     return D
 
