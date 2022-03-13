@@ -24,7 +24,7 @@ algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
 simulation = [] # ["equilibrium", "simulation"]
-observables = [] # ["pair_correlation", "specific_heat", "pressure", "diffusion"]
+observables = ["pressure"] # ["pair_correlation", "specific_heat", "pressure", "diffusion"]
 plotting = [] # ["gif", "Evst"]
 
 ##########################################################
@@ -99,6 +99,5 @@ if "pressure" in observables:
 	eq_pos, eq_vel = sim.load_final_data("output.csv")
 	temperature_eq = sim.temperature(eq_vel)
 	P, AP_autocorr, AP_datablock = obs.pressure_error("output.csv", temperature_eq, box_length)
+	print("pressure (T = {:0.5f}) = {:0.5f} +-autocorrelation {:0.5f} or +- databloking {:0.5f}".format(temperature_eq, P, AP_autocorr, AP_datablock))
 	print("DONE")
-
-

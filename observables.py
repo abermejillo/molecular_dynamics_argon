@@ -69,11 +69,9 @@ def specific_heat(file_name):
     particle_num = np.shape(vel)[1] 
 
     total_kin = (0.5*(vel**2).sum(2)).sum(1)
-    mean_kin = total_kin.sum()/num_tsteps
-    square_of_mean_kin = mean_kin**2
-    mean_of_square_kin = (total_kin**2).sum()/num_tsteps
-    mean_of_fourth_kin = (total_kin**4).sum()/num_tsteps
-    r = mean_of_square_kin/square_of_mean_kin - 1 # relative fluctuations in kinetic energy
+    ave_Kin = np.average(total_kin)
+    ave_Kin2 = np.average(total_kin**2)
+    r = ave_Kin2/ave_Kin**2 - 1 # relative fluctuations in kinetic energy
 
     c = 1.5/(1-3*particle_num*r/2)
 
@@ -215,18 +213,14 @@ def autocorrelation_function(data):
     return Xa
 
 
-def correlation_time(data, runtime, num_tsteps):
+def correlation_time(data):
     """
-    Returns the autocorrelation time for a given data set evenly distributed along the simulation runtime. 
+    Returns the autocorrelation time for the given data. 
 
     Parameters
     ----------
     data : np.ndarray(len(time))
         Variable as a function of time
-    runtime : float
-        Runtime of the simulation
-    num_tsteps : float
-        Number of timesteps in which the simulation is divided.
 
     Returns
     -------
@@ -234,36 +228,37 @@ def correlation_time(data, runtime, num_tsteps):
         Autocorrelation time for the given variable.
     """
 
+    # autocorrelation function
     Xa = autocorrelation_function(data)
-    time = np.arange(num_tsteps)
-    N_max = np.where(np.diff(Xa) > 0)[0][0] # find first point that Xa increases
+
+    t = np.arange(len(data)-1)
+    t_tau = np.where(Xa < 1/np.e)[0][0]
+    t_max = t_tau*3
+    
     function = lambda x,tau: np.exp(-x/tau) # function for fitting the error
-    popt, _ = optimize.curve_fit(function,  time[:N_max],  Xa[:N_max])
+    popt, _ = optimize.curve_fit(function,  t[:t_max],  Xa[:t_max])
     tau = popt[0]
 
     return tau
 
 
-def data_blocking(data, b_range):
+def error_data_blocking(data):
     """
-    Returns error from data blocking as a function of block length size (b_range) and also the total one. 
+    Returns error from data using data blocking. 
 
     Parameters
     ----------
     data : np.ndarray(len(time))
         Variable as a function of time
-    b_range : np.ndarray
-        Block lenght sizes
 
     Returns
     -------
     error : float
         Error of the given variable
-    sigma : np.ndarray(len(b_range))
-        Error of the given variable as a function of block length size
     """
 
     N = len(data)
+    b_range = np.arange(2, int(N/2))
     sigma = np.zeros(len(b_range))
 
     for k, b in enumerate(b_range):
@@ -273,14 +268,39 @@ def data_blocking(data, b_range):
         average_blocks = np.average(blocks, axis=1)
         sigma[k] = np.sqrt(((average_blocks**2).sum()/Nb - (average_blocks.sum()/Nb)**2) / (Nb-1)) 
 
+    # fitting
+    b_negative = np.where(np.diff(sigma) < 0)[0][0] # find first point that decreases
+    b_max = b_negative*4 # increase the range to have a better fitting
+    function = lambda x,a,b,c: b-c*np.exp(-a*x) # function for fitting the error
     try: 
-        function = lambda x,a,b,c: b-c*np.exp(-a*x) # function for fitting the error
-        popt, _ = optimize.curve_fit(function,  b_range,  sigma)
+        popt, _ = optimize.curve_fit(function,  b[:b_max],  sigma[:b_max])
         error = popt[1]
-    except:
-        error = np.max(sigma)
+    except: # just in case there is an error in the fitting
+        error = np.max(sigma[:b_max])
 
-    return error, sigma
+    return error
+
+
+def error_autocorrelation(data):
+    """
+    Returns error from data using autocorrelation function. 
+
+    Parameters
+    ----------
+    data : np.ndarray(len(time))
+        Variable as a function of time
+
+    Returns
+    -------
+    error : float
+        Error of the given variable
+    """
+    
+    N = len(data)
+    tau = correlation_time(data)
+    error = np.sqrt(2*tau/N*(np.average(data**2) - np.average(data)**2))
+    
+    return error
 
 
 #---------------------------------------------------------
@@ -307,36 +327,26 @@ def specific_heat_error(file_name):
     """
 
     time, pos, vel = sim.load_data(file_name)
-    num_tsteps = len(time) 
     particle_num = np.shape(vel)[1] 
 
     total_kin = (0.5*(vel**2).sum(2)).sum(1)
-    mean_kin = total_kin.sum()/num_tsteps
-    square_of_mean_kin = mean_kin**2
-    mean_of_square_kin = (total_kin**2).sum()/num_tsteps
-    mean_of_fourth_kin = (total_kin**4).sum()/num_tsteps
-    r = mean_of_square_kin/square_of_mean_kin - 1 # relative fluctuations in kinetic energy
+    ave_Kin = np.average(total_kin)
+    ave_Kin2 = np.average(total_kin**2) #
+    r = ave_Kin2/ave_Kin**2 - 1 # relative fluctuations in kinetic energy
 
     c = 1.5/(1-3*particle_num*r/2)
 
     # Computation of the error with the autocorrelation function method
-    tau_mean_of_square_kin = correlation_time(total_kin**2, time[-1], num_tsteps)
-    tau_mean_kin = correlation_time(total_kin, time[-1], num_tsteps)
-
-    err_mean_of_square_kin_autocorr = np.sqrt(2*tau_mean_of_square_kin/num_tsteps*(mean_of_fourth_kin - mean_of_square_kin**2))
-    err_mean_of_kin_autocorr = np.sqrt(2*tau_mean_kin/num_tsteps*(mean_of_square_kin - square_of_mean_kin))
-
-    Ac_autocorr = np.sqrt( (particle_num*(1/square_of_mean_kin)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2)**2*err_mean_of_square_kin_autocorr**2 + \
-         particle_num*mean_of_square_kin/square_of_mean_kin**(3/2)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2*err_mean_of_kin_autocorr )
+    err_AC_Kin2 = error_autocorrelation(total_kin**2)
+    err_AC_Kin = error_autocorrelation(total_kin)
+    Ac_autocorr = np.sqrt( (particle_num*(1/ave_Kin**2)/(2/3*particle_num + 1 - ave_Kin2/ave_Kin**2)**2)**2*err_AC_Kin2**2 + \
+         particle_num*ave_Kin2/ave_Kin**2**(3/2)/(2/3*particle_num + 1 - ave_Kin2/ave_Kin**2)**2*err_AC_Kin )
 
     # Computation of the error with the data-blocking method
-    b_range = np.arange(1, min([500, int(len(time)/2)]), dtype=int)
-
-    err_mean_of_square_kin_datablock = data_blocking(total_kin**2, b_range)[0]
-    err_mean_of_kin_datablock = data_blocking(total_kin, b_range)[0]
-
-    Ac_datablock = np.sqrt( (particle_num*(1/square_of_mean_kin)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2)**2*err_mean_of_square_kin_datablock**2 + \
-         particle_num*mean_of_square_kin/square_of_mean_kin**(3/2)/(2/3*particle_num + 1 - mean_of_square_kin/square_of_mean_kin)**2*err_mean_of_kin_datablock )
+    err_DB_Kin2 = error_data_blocking(total_kin**2)
+    err_DB_Kin = error_data_blocking(total_kin)
+    Ac_datablock = np.sqrt( (particle_num*(1/ave_Kin**2)/(2/3*particle_num + 1 - ave_Kin2/ave_Kin**2)**2)**2*err_DB_Kin2**2 + \
+         particle_num*ave_Kin2/ave_Kin**2**(3/2)/(2/3*particle_num + 1 - ave_Kin2/ave_Kin**2)**2*err_DB_Kin )
     
     return c, Ac_autocorr, Ac_datablock 
 
@@ -389,7 +399,8 @@ def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
     b_range = np.arange(1, min([500, int(len(time)/2)]), dtype=int)
     for i, r_i in enumerate(r):
         print("\rCompute error (data blocking): {}/{}".format(i+1, len(r)), end="")
-        n_error[i] = data_blocking(n_time[:,i], b_range)[0]
+        if n_time[:,i].sum() != 0: # if all of them are zeros, it does not make sense to calculate error
+            n_error[i] = error_data_blocking(n_time[:,i])
 
     Ag_datablock = 2*box_length**3 / (particle_num*(particle_num-1)) * (n_error) / (4*np.pi*r**2 * dr)
 
@@ -398,10 +409,7 @@ def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
     for i, r_i in enumerate(r):
         print("\rCompute error (autocorrelation): {}/{}".format(i+1, len(r)), end="")
         if n_time[:,i].sum() != 0: # if all of them are zeros, it is not possible to calculate autocorrelation function
-            tau = correlation_time(n_time[:,i], time[-1], num_tsteps)
-            mean = np.average(n_time[:,i])
-            mean_squared = np.average(n_time[:,i]**2)
-            n_error[i] = np.sqrt(2*tau/num_tsteps*(mean_squared - mean**2))
+            n_error[i] = error_autocorrelation(n_time[:,i])
 
     Ag_autocorr = 2*box_length**3 / (particle_num*(particle_num-1)) * (n_error) / (4*np.pi*r**2 * dr)
 
@@ -457,21 +465,17 @@ def pressure_error(file_name, T, box_length):
 
     print("")
 
-    second_term_average = np.average(second_term_instantenous)
-    second_term_squared_average = np.average(second_term_instantenous**2)
-    BP_rho =  1+second_term_average
+    BP_rho = 1 + np.average(second_term_instantenous)
 
     P = BP_rho*T*N/box_length**3
 
     # Computation of the error with the autocorrelation function method
-    tau_second_term = correlation_time(second_term_instantenous, time[-1], M)
-    sigma_second_term  = np.sqrt(2*tau_second_term*(second_term_squared_average-second_term_average**2)/M)
-    AP_autocorr = N*T*sigma_second_term/box_length**3 # Through propagation of errors
+    err_AC_second_term = error_autocorrelation(second_term_instantenous)
+    AP_autocorr = N*T*err_AC_second_term/box_length**3 # Through propagation of errors
 
     # Computation of the error with the data-blocking method
-    b_range = np.arange(1, min([500, int(len(time)/2)]), dtype=int)
-    error_second_term = data_blocking(second_term_instantenous, b_range)[0]
-    AP_data_block = N*T*error_second_term/box_length**3 # Through propagation of errors
+    err_DB_second_term = error_data_blocking(second_term_instantenous)
+    AP_data_block = N*T*err_DB_second_term/box_length**3 # Through propagation of errors
 
     return P, AP_autocorr, AP_data_block
 
