@@ -16,7 +16,7 @@ def pair_correlation_function(file_name, dr, box_length, r_max=None):
     file_name : str
         Name of the CSV file in which the data is stored
     dr : float
-		distance between bins in the histogram
+		Distance between bins in the histogram
 	box_length : float
 		Box size
     r_max : float
@@ -36,9 +36,9 @@ def pair_correlation_function(file_name, dr, box_length, r_max=None):
     time, pos, _ = sim.load_data(file_name)
     particle_num = pos.shape[0]
 
-    for k, t in enumerate(time):
+    for k, _ in enumerate(time):
         print("\r{}/{}".format(k+1, len(time)), end="")
-        rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
+        _, rel_dist = sim.atomic_distances(pos[k], box_length)
         for i, r_i in enumerate(r):
             n[i] += len(np.where((rel_dist >= r_i) & (rel_dist < r_i + dr))[0])
     
@@ -64,8 +64,7 @@ def specific_heat(file_name):
         Specific heat per atom of the system
     """
 
-    time, pos, vel = sim.load_data(file_name)
-    num_tsteps = len(time) 
+    _, _, vel = sim.load_data(file_name)
     particle_num = np.shape(vel)[1] 
 
     total_kin = (0.5*(vel**2).sum(2)).sum(1)
@@ -94,7 +93,6 @@ def diffusion(file_name):
     """
 
     time, pos, _ = sim.load_data(file_name)
-    particle_num = pos.shape[1]
 
     dist = (pos[-1] - pos[0])
     dist_squared = (dist*dist).sum(axis=1)
@@ -121,22 +119,22 @@ def pressure(file_name, T, box_length):
     P : float
         Pressure
     """
-    time, pos, vel = sim.load_data(file_name)
+    time, pos, _ = sim.load_data(file_name)
 
-    N = np.shape(pos)[1]
-    M = len(time)
+    particle_num = np.shape(pos)[1]
+    num_tsteps = len(time)
 
-    second_term_instantenous = np.zeros(M)
+    second_term_instantenous = np.zeros(num_tsteps)
 
     for k, t in enumerate(time):
         print("\r{}/{}".format(k+1, len(time)), end="")
 
-        rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
+        _, rel_dist = sim.atomic_distances(pos[k], box_length)
 
         rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
         rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
 
-        matrix = (1/(6*N*T))*24*(2/rel_dist**12-1/rel_dist**7)
+        matrix = (1/(6*particle_num*T))*24*(2/rel_dist**12-1/rel_dist**7)
         matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
 
         second_term_instantenous[k] = matrix.sum()
@@ -145,7 +143,7 @@ def pressure(file_name, T, box_length):
 
     BP_rho =  1+np.average(second_term_instantenous)
 
-    P = BP_rho*T*N/box_length**3
+    P = BP_rho*T*particle_num/box_length**3
 
     return P
 
@@ -326,7 +324,7 @@ def specific_heat_error(file_name):
         Error of the specific heat per atom with the datablocking method
     """
 
-    time, pos, vel = sim.load_data(file_name)
+    _, _, vel = sim.load_data(file_name)
     particle_num = np.shape(vel)[1] 
 
     total_kin = (0.5*(vel**2).sum(2)).sum(1)
@@ -339,12 +337,14 @@ def specific_heat_error(file_name):
     # Computation of the error with the autocorrelation function method
     err_AC_Kin2 = error_autocorrelation(total_kin**2)
     err_AC_Kin = error_autocorrelation(total_kin)
+
     Ac_autocorr = np.sqrt( (particle_num*(1/ave_Kin**2)/(2/3*particle_num + 1 - ave_Kin2/ave_Kin**2)**2)**2*err_AC_Kin2**2 + \
          particle_num*ave_Kin2/ave_Kin**2**(3/2)/(2/3*particle_num + 1 - ave_Kin2/ave_Kin**2)**2*err_AC_Kin )
 
     # Computation of the error with the data-blocking method
     err_DB_Kin2 = error_data_blocking(total_kin**2)
     err_DB_Kin = error_data_blocking(total_kin)
+
     Ac_datablock = np.sqrt( (particle_num*(1/ave_Kin**2)/(2/3*particle_num + 1 - ave_Kin2/ave_Kin**2)**2)**2*err_DB_Kin2**2 + \
          particle_num*ave_Kin2/ave_Kin**2**(3/2)/(2/3*particle_num + 1 - ave_Kin2/ave_Kin**2)**2*err_DB_Kin )
     
@@ -360,7 +360,7 @@ def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
     file_name : str
         Name of the CSV file in which the data is stored
     dr : float
-        distance between bins in the histogram
+        Distance between bins in the histogram
     box_length : float
         Box size
     r_max : float
@@ -387,7 +387,7 @@ def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
 
     for k, t in enumerate(time):
         print("\rGet data : {}/{}".format(k+1, len(time)), end="")
-        rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
+        _, rel_dist = sim.atomic_distances(pos[k], box_length)
         for i, r_i in enumerate(r):
             n_time[k,i] = len(np.where((rel_dist >= r_i) & (rel_dist < r_i + dr))[0])
 
@@ -396,7 +396,6 @@ def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
 
     # Computation of the error with the data-blocking method
     n_error = np.zeros(len(r))
-    b_range = np.arange(1, min([500, int(len(time)/2)]), dtype=int)
     for i, r_i in enumerate(r):
         print("\rCompute error (data blocking): {}/{}".format(i+1, len(r)), end="")
         if n_time[:,i].sum() != 0: # if all of them are zeros, it does not make sense to calculate error
@@ -443,22 +442,22 @@ def pressure_error(file_name, T, box_length):
     """
 
     # Calculation of pressure
-    time, pos, vel = sim.load_data(file_name)
+    time, pos, _ = sim.load_data(file_name)
 
-    N = np.shape(pos)[1]
-    M = len(time)
+    particle_num = np.shape(pos)[1]
+    num_tsteps = len(time)
 
-    second_term_instantenous = np.zeros(M)
+    second_term_instantenous = np.zeros(num_tsteps)
 
     for k, t in enumerate(time):
         print("\r{}/{}".format(k+1, len(time)), end="")
 
-        rel_pos, rel_dist = sim.atomic_distances(pos[k], box_length)
+        _, rel_dist = sim.atomic_distances(pos[k], box_length)
 
         rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
         rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
 
-        matrix = (1/(6*N*T))*24*(2/rel_dist**12-1/rel_dist**7)
+        matrix = (1/(6*particle_num*T))*24*(2/rel_dist**12-1/rel_dist**7)
         matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
 
         second_term_instantenous[k] = matrix.sum()
@@ -467,15 +466,15 @@ def pressure_error(file_name, T, box_length):
 
     BP_rho = 1 + np.average(second_term_instantenous)
 
-    P = BP_rho*T*N/box_length**3
+    P = BP_rho*T*particle_num/box_length**3
 
     # Computation of the error with the autocorrelation function method
     err_AC_second_term = error_autocorrelation(second_term_instantenous)
-    AP_autocorr = N*T*err_AC_second_term/box_length**3 # Through propagation of errors
+    AP_autocorr = particle_num*T*err_AC_second_term/box_length**3 # Through propagation of errors
 
     # Computation of the error with the data-blocking method
     err_DB_second_term = error_data_blocking(second_term_instantenous)
-    AP_data_block = N*T*err_DB_second_term/box_length**3 # Through propagation of errors
+    AP_data_block = particle_num*T*err_DB_second_term/box_length**3 # Through propagation of errors
 
     return P, AP_autocorr, AP_data_block
 

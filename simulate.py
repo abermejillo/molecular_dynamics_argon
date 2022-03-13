@@ -7,57 +7,9 @@ SIGMA = 3.405E-10 # parameter of LJ potential for Argon atoms in SI
 EPSILON = 119.8*KB # parameter of LJ potential for Argon atoms in SI
 MASS = 6.6335209E-26 # Argon particle mass in SI
 
-
-def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, method="verlet", resc_thr=[1E-2, 0.1]):
-    """
-    Molecular dynamics simulation using the Euler algorithm
-    to integrate the equations of motion. 
-    Saves data for each iteration using 'save_data' function. 
-    N = number of particles
-    d = dimensionality of the box
-
-    Parameters
-    ----------
-    init_pos : np.ndarray(N,d)
-        Initial positions of the atoms in Cartesian space
-    init_vel : np.ndarray(N,d)
-        Initial velocities of the atoms in Cartesian space
-    num_tsteps : int
-        Total number of simulation steps
-    timestep : float
-        Duration of a single simulation step
-    box_dim : float
-        Dimensions of the simulation box
-    file_name : str
-        Name of the CSV file to store the simulation data
-    method : "verlet" or "euler"
-        Selects method for the time evoluiton algorithm
-
-    Returns
-    -------
-    None
-    """
-
-    pos, vel = init_pos, init_vel
-    f = open(file_name, "w")
-    f.write("N={} d={}\n".format(pos.shape[0], pos.shape[1])) # header
-    save_data(f, 0, pos, vel) # save initial position
-    
-    for k in np.arange(1, num_tsteps+1):
-        print("\rtime step : {:7d}/{}".format(k, num_tsteps), end="")
-
-        if method == "verlet":
-            pos, vel = simulate_step_verlet(pos, vel, timestep, box_dim)
-        if method == "euler":
-            pos, vel = simulate_step_euler(pos, vel, timestep, box_dim)
-
-        save_data(f, k*timestep, pos, vel)
-
-    print("")
-    f.close()
-
-    return 
-
+#--------------------------------------------------
+# 1. Functions for the time evolution of the system
+#--------------------------------------------------
 
 def simulate_step_euler(pos, vel, timestep, box_dim):
     """
@@ -139,7 +91,90 @@ def simulate_step_verlet(pos, vel, timestep, box_dim):
     pos = pos - np.floor(pos/box_dim)*box_dim
 
     return pos, vel
+
+
+def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, method="verlet"):
+    """
+    Molecular dynamics simulation using the Euler algorithm
+    to integrate the equations of motion. 
+    Saves data for each iteration using 'save_data' function. 
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    init_pos : np.ndarray(N,d)
+        Initial positions of the atoms in Cartesian space
+    init_vel : np.ndarray(N,d)
+        Initial velocities of the atoms in Cartesian space
+    num_tsteps : int
+        Total number of simulation steps
+    timestep : float
+        Duration of a single simulation step
+    box_dim : float
+        Dimensions of the simulation box
+    file_name : str
+        Name of the CSV file to store the simulation data
+    method : "verlet" or "euler"
+        Selects method for the time evoluiton algorithm
+
+    Returns
+    -------
+    None
+    """
+
+    pos, vel = init_pos, init_vel
+    f = open(file_name, "w")
+    f.write("N={} d={}\n".format(pos.shape[0], pos.shape[1])) # header
+    save_data(f, 0, pos, vel) # save initial position
     
+    for k in np.arange(1, num_tsteps+1):
+        print("\rtime step : {:7d}/{}".format(k, num_tsteps), end="")
+
+        if method == "verlet":
+            pos, vel = simulate_step_verlet(pos, vel, timestep, box_dim)
+        if method == "euler":
+            pos, vel = simulate_step_euler(pos, vel, timestep, box_dim)
+
+        save_data(f, k*timestep, pos, vel)
+
+    print("")
+    f.close()
+
+    return 
+
+#--------------------------------
+# 2. Thermalization of the system
+#--------------------------------
+
+def rescale_velocity(vel, T, T_current=None):
+    """
+    Rescales velocities to match the desired temperature
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    vel : np.ndarray(N,d)
+        Array of particle velocities
+    T : float
+        (unitless) desired temperature of the system
+
+    Returns
+    -------
+    resc_vel : np.ndarray(N,d)
+        Rescaled array of particle velocities
+    T_current : float
+        (unitless) actual temperature of the system before the reescaling
+    """
+
+    if T_current is None:
+        T_current = temperature(vel)
+    resc_factor = np.sqrt(T/T_current)
+    resc_vel = resc_factor*vel
+
+    return resc_vel, T_current
+
 
 def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, file_name, method="verlet", resc_thr=[1E-2, 0.1]):
     """
@@ -213,6 +248,9 @@ def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, fi
 
     return eq_reached
 
+#------------------------------------------------------------------
+# 3. Necessary parameters for the time evolution
+# ----------------------------------------------------------------- 
 
 def atomic_distances(pos, box_dim):
     """
@@ -247,11 +285,11 @@ def atomic_distances(pos, box_dim):
         where i denotes row and j denotes column and alpha the cartesian coordinate
     """
 
-    N = np.shape(pos)[0] # Number of particles
+    particle_num = np.shape(pos)[0] 
 
     # Compute relative positions
-    pos1 = np.repeat(pos[:, np.newaxis, :], N, axis=1)
-    pos2 = np.repeat(pos[np.newaxis, :, :], N, axis=0)
+    pos1 = np.repeat(pos[:, np.newaxis, :], particle_num, axis=1)
+    pos2 = np.repeat(pos[np.newaxis, :, :], particle_num, axis=0)
     rel_pos = pos1 - pos2
     # check if using the minimum distance between pairs due to BC
     wrong_pairs = np.where(np.abs(rel_pos) > box_dim/2)
@@ -291,6 +329,9 @@ def lj_force(rel_pos, rel_dist):
 
     return total_force
 
+#------------------------------------------------------
+# 4. Position and velocity initialization
+#------------------------------------------------------
 
 def fcc_lattice(num_atoms, lattice_const):
     """
@@ -331,81 +372,6 @@ def fcc_lattice(num_atoms, lattice_const):
     L = b*lattice_const
 
     return pos, L
-
-
-def kinetic_energy(vel):
-    """
-    Computes the kinetic energy of an atomic system.
-    N = number of particles
-    d = dimensionality of the box
-
-    Parameters
-    ----------
-    vel: np.ndarray(N,d)
-        Velocities of particles
-
-    Returns
-    -------
-    float
-        Total kinetic energy of the system
-    """
-
-    return 0.5*(vel**2).sum()
-
-
-def potential_energy(pos, box_dim):
-    """
-    Computes the potential energy of an atomic system.
-    N = number of particles
-    d = dimensionality of the box
-
-    Parameters
-    ----------
-    pos : np.ndarray(N,d)
-        Positions of the particles in cartesian space
-    box_dim : float
-        Dimension of the simulation box
-
-    Returns
-    -------
-    float
-        Total potential energy of the system
-    """
-    rel_pos, rel_dist = atomic_distances(pos, box_dim)
-    rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating potential energy
-
-    mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool) # mask for skipping diagonal terms
-    pot_energy = 4*(1/rel_dist**12-1/rel_dist**6)
-    pot_energy = np.sum(pot_energy, where=mask)/2 # The diagonal terms are skipped (no self-interaction)
-
-    return pot_energy
-
-
-def total_energy(pos, vel, box_dim): 
-    """
-    Computes the total energy of an atomic system
-    N = number of particles
-    d = dimensionality of the box
-
-    Parameters
-    ----------
-    pos : np.ndarray(N,d)
-        Positions of the particles in cartesian space
-    vel: np.ndarray(N,d)
-        Velocities of particles
-    box_dim : float
-        Dimension of the simulation box
-
-    Returns
-    -------
-    float
-        The total energy of the system
-    """
-
-    kin_energy = kinetic_energy(vel)
-    pot_energy = potential_energy(pos, box_dim)
-
-    return kin_energy + pot_energy
 
 
 def random_gaussian_vector(num, sigma):
@@ -460,6 +426,84 @@ def init_velocity(num_atoms, temp):
     
     return vel
 
+#------------------------------------------------------------------
+# 5. System's characteristics computation: Energies and temperature 
+#------------------------------------------------------------------
+
+def kinetic_energy(vel):
+    """
+    Computes the kinetic energy of an atomic system.
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    vel: np.ndarray(N,d)
+        Velocities of particles
+
+    Returns
+    -------
+    float
+        Total kinetic energy of the system
+    """
+
+    return 0.5*(vel**2).sum()
+
+
+def potential_energy(pos, box_dim):
+    """
+    Computes the potential energy of an atomic system.
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    pos : np.ndarray(N,d)
+        Positions of the particles in cartesian space
+    box_dim : float
+        Dimension of the simulation box
+
+    Returns
+    -------
+    float
+        Total potential energy of the system
+    """
+    _, rel_dist = atomic_distances(pos, box_dim)
+    rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating potential energy
+
+    mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool) # mask for skipping diagonal terms
+    pot_energy = 4*(1/rel_dist**12-1/rel_dist**6)
+    pot_energy = np.sum(pot_energy, where=mask)/2 # The diagonal terms are skipped (no self-interaction)
+
+    return pot_energy
+
+
+def total_energy(pos, vel, box_dim): 
+    """
+    Computes the total energy of an atomic system
+    N = number of particles
+    d = dimensionality of the box
+
+    Parameters
+    ----------
+    pos : np.ndarray(N,d)
+        Positions of the particles in cartesian space
+    vel: np.ndarray(N,d)
+        Velocities of particles
+    box_dim : float
+        Dimension of the simulation box
+
+    Returns
+    -------
+    float
+        The total energy of the system
+    """
+
+    kin_energy = kinetic_energy(vel)
+    pot_energy = potential_energy(pos, box_dim)
+
+    return kin_energy + pot_energy
+
 
 def temperature(vel):
     """
@@ -478,41 +522,14 @@ def temperature(vel):
         (unitless) desired temperature of the system
     """
 
-    N = vel.shape[0]
-    T = (vel**2).sum()/(3*(N-1))
+    particle_num = vel.shape[0]
+    T = (vel**2).sum()/(3*(particle_num-1))
 
     return T
 
-def rescale_velocity(vel, T, T_current=None):
-    """
-    Rescales velocities to match the desired temperature
-    N = number of particles
-    d = dimensionality of the box
-
-    Parameters
-    ----------
-    vel : np.ndarray(N,d)
-        Array of particle velocities
-    T : float
-        (unitless) desired temperature of the system
-
-    Returns
-    -------
-    resc_vel : np.ndarray(N,d)
-        Rescaled array of particle velocities
-    T_current : float
-        (unitless) actual temperature of the system before the reescaling
-    """
-
-    N = vel.shape[0]
-
-    if T_current is None:
-        T_current = temperature(vel)
-    resc_factor = np.sqrt(T/T_current)
-    resc_vel = resc_factor*vel
-
-    return resc_vel, T_current
-
+#--------------------------------------------------
+# 6. Saving and loading data to and from text files
+#--------------------------------------------------
 
 def save_data(file_class, time, pos, vel):
     """
@@ -537,13 +554,13 @@ def save_data(file_class, time, pos, vel):
         File in which to the data has been written
     """
 
-    N = pos.shape[0] # number of particles
-    d = pos.shape[1] # dimensionality of the box
+    particle_num = pos.shape[0] 
+    box_dim = pos.shape[1] 
     pos, vel = pos.reshape(-1), vel.reshape(-1) # reshape as: pos_x1, pos_y1, ... pos_x2, pos_y2, ... | vel_x1, vel_y1, ... vel_x2, vel_y2, ...
 
     data = "{:0.25e}".format(time)
-    data += (",{:0.25e}"*d*N).format(*pos)
-    data += (",{:0.25e}"*d*N).format(*vel)
+    data += (",{:0.25e}"*box_dim*particle_num).format(*pos)
+    data += (",{:0.25e}"*box_dim*particle_num).format(*vel)
     data += "\n"
 
     file_class.write(data)

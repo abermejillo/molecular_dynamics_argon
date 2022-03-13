@@ -30,7 +30,7 @@ def GIF_2D(gif_name, data_file, num_frames, box_dim):
     None
     """
 
-    time, pos, vel = sim.load_data(data_file)
+    time, pos, _ = sim.load_data(data_file)
     num_tsteps = len(time) 
     save_frame = [int(i*(num_tsteps-1)/(num_frames-1)) for i in range(num_frames-1)] + [int(num_tsteps)-1] # timesteps in which to save frames
 
@@ -85,7 +85,7 @@ def GIF_3D(gif_name, data_file, num_frames, box_dim):
     None
     """
 
-    time, pos, vel = sim.load_data(data_file)
+    time, pos, _ = sim.load_data(data_file)
     num_tsteps = len(time) 
     save_frame = [int(i*(num_tsteps-1)/(num_frames-1)) for i in range(num_frames-1)] + [int(num_tsteps)-1] # timesteps in which to save frames
 
@@ -262,7 +262,7 @@ def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=Fa
         ax.plot([L,L],[0,L],[L,L],"g-")  
 
     if relative_pos:
-        rel_pos, rel_dist = sim.atomic_distances(pos, L)
+        rel_pos, _ = sim.atomic_distances(pos, L)
         for i in range(pos.shape[0]):
             for j in range(pos.shape[0]):
                     if i == j: continue
@@ -420,7 +420,7 @@ def reldist_vs_t(data_file, i, j, box_dim):
     None
     """
 
-    time, pos, vel = sim.load_data(data_file)
+    time, pos, _ = sim.load_data(data_file)
 
     rel_dist = []
     for k, t in enumerate(time):
@@ -575,8 +575,8 @@ def merge_GIF_3D(gif_name, data_file1, data_file2, num_frames, box_dim):
     None
     """
 
-    time, pos1, vel1 = sim.load_data(data_file1)
-    time, pos2, vel2 = sim.load_data(data_file2)
+    time, pos1, _ = sim.load_data(data_file1)
+    time, pos2, _ = sim.load_data(data_file2)
     num_tsteps = len(time) 
     save_frame = [int(i*(num_tsteps-1)/(num_frames-1)) for i in range(num_frames-1)] + [int(num_tsteps)-1] # timesteps in which to save frames
 
@@ -621,7 +621,7 @@ def plot_maxwell_distribution(init_vel, temp):
     init_vel : np.array(N,d)
         Initial distribution of velocities
     temp : float
-        temperature of the system in units of KB/epsilon
+        Temperature of the system in units of KB/epsilon
     
     Returns
     -------

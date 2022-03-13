@@ -11,7 +11,7 @@ import observables as obs
 ##########################################################
 
 # Input parameters
-particle_num = 4*(5**3) 
+particle_num = 4*(3**3) 
 dim = 3 
 lattice_const = 2*1.5471 # [\sigma]
 temperature = 5 # [\epsilon/Kb]
@@ -23,9 +23,9 @@ num_tsteps = 500
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
-simulation = [] # ["equilibrium", "simulation"]
-observables = ["pressure"] # ["pair_correlation", "specific_heat", "pressure", "diffusion"]
-plotting = [] # ["gif", "Evst"]
+simulation = ["equilibrium", "simulation"] # ["equilibrium", "simulation"]
+observables = ["pair_correlation", "specific_heat", "pressure", "diffusion"] # ["pair_correlation", "specific_heat", "pressure", "diffusion"]
+plotting = ["gif"] # ["gif", "Evst"]
 
 ##########################################################
 
