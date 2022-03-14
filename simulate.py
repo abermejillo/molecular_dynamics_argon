@@ -1,7 +1,5 @@
 import numpy as np
 
-# These constants do not play a role anymore. Will leave them here for the moment. 
-
 KB = 1.3806E-23 # Boltzmann constant in SI
 SIGMA = 3.405E-10 # parameter of LJ potential for Argon atoms in SI
 EPSILON = 119.8*KB # parameter of LJ potential for Argon atoms in SI
@@ -143,6 +141,7 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, metho
 
     return 
 
+
 #--------------------------------
 # 2. Thermalization of the system
 #--------------------------------
@@ -248,6 +247,7 @@ def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, fi
 
     return eq_reached
 
+
 #------------------------------------------------------------------
 # 3. Necessary parameters for the time evolution
 # ----------------------------------------------------------------- 
@@ -328,6 +328,7 @@ def lj_force(rel_pos, rel_dist):
     total_force = force.sum(1)
 
     return total_force
+
 
 #------------------------------------------------------
 # 4. Position and velocity initialization
@@ -421,10 +422,13 @@ def init_velocity(num_atoms, temp):
         Array of particle velocities
     """
 
-    vel = np.array([random_gaussian_vector(num_atoms, np.sqrt(temp)),random_gaussian_vector(num_atoms, np.sqrt(temp)),random_gaussian_vector(num_atoms, np.sqrt(temp))])
+    vel = np.array([random_gaussian_vector(num_atoms, np.sqrt(temp)),\
+                    random_gaussian_vector(num_atoms, np.sqrt(temp)),\
+                    random_gaussian_vector(num_atoms, np.sqrt(temp))])
     vel = vel.T
     
     return vel
+
 
 #------------------------------------------------------------------
 # 5. System's characteristics computation: Energies and temperature 
@@ -526,6 +530,7 @@ def temperature(vel):
     T = (vel**2).sum()/(3*(particle_num-1))
 
     return T
+
 
 #--------------------------------------------------
 # 6. Saving and loading data to and from text files
