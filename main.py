@@ -13,11 +13,11 @@ import observables as obs
 particle_num = 4*(5**3) 
 dim = 3
 lattice_const = 2*1.5471 # [\sigma]
-temperature = 5 # [\epsilon/Kb]
+temperature = 0.1 # [\epsilon/Kb]
 temperature_error = 0.01 # error in the temperature when rescaling [\epsilon/KB]
 rescale_time = 0.1 # interval between rescalings
 
-run_time = 1 # \sqrt(mass*\sigma^2/\epsilon)
+run_time = 2 # \sqrt(mass*\sigma^2/\epsilon)
 num_tsteps = 1000 
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
@@ -28,7 +28,7 @@ plotting = ["gif", "Evst"]
 
 ##########################################################
 
-print("Nparticles={}, lattice_const={}, box_dimension={}, temperature={}, run_time={}, num_tsteps={}, algorithm_method={}".format(particle_num, lattice_const, box_length, temperature, run_time, num_tsteps, algorithm_method))
+print("Nparticles={}, lattice_const={}, box_dimension={}, temperature={}, run_time={}, num_tsteps={}, algorithm_method={}".format(particle_num, lattice_const, (int(((particle_num - 1)/4)**(1/3)) + 1)*lattice_const, temperature, run_time, num_tsteps, algorithm_method))
 
 # 1. Get system to equilibrium
 if "equilibrium" in simulation:
