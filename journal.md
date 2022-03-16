@@ -275,4 +275,105 @@ These results suggest that our simulation is going in the right direction. Howev
 - Search for known values of different observables (and errors if possible) in the literature: Pair correlation function @mserraperalta, pressure @dbedialaunetar, specific heat and diffusion @abermejillo
 - Start introducing ideas, figures and references into the final report @mserraperalta @dbedialaunetar @abermejillo
 
+### Progress
+
+First, we will briefly comment how the tasks from the bulletlist have been performed and by whom.
+
+1. @mserraperalta [tested the error implementations of autocorrelation function and data blocking](4b3934f494a138efa97df063b75ae5c012960ca5) and then [introduced some improvements](b37cee8e69e925d509273f88f3b44f4a68c6b300) to our error functions.
+2. @dbedialaunetar implemented the error of the diffusion observable.
+3. @mserraperalta and @abermejillo updated the documentation and together with @dbedialaunetar corrected some errors in the code.
+4. @abermejillo performed an [efficiency analysis](4cca5d21eb0fba558bb59d5a680a9d461843fafc) of the code .
+5. @mserraperalta, @abermejillo and @dbedialaunetar have found several sources of literature to compare our results with. Some examples include:
+   - [Diffusion coefficient](https://doi.org/10.1063/1.1747116)
+   - [Isotherms, pressure and specific heat](https://doi.org/10.1063/1.556037)
+   - [Pair-correlation function](https://doi.org/10.1063/1.447223)
+   - [Triple and critical points](https://www.engineeringtoolbox.com/argon-d_1414.html)
+6. The main results that we aim to obtain for the report are:
+   - A plot which shows the pair correlation function for solid, liquid and gas (which was already obtained, and can be found in last week's journal)
+   - A number of isotherms that show the behaviour for solid, liquid and gas. In principle, our aim is to observe the change of phase in these plots.
+   - The specific heat with respect to temperature.
+   - The diffusion coefficient for three temperatures that correspond to solid, liquid and gas.
+7. @dbedialaunetar obtained additional plots to characterize the three phases of argon based on the mean squared displacement.
+
+We will have to keep in mind that results in the phase transition regime might not be consistent because of the large fluctuations, and perhaps we have to limit ourselves to the regions where the phase of the system is well defined.
+
+**Results and comments**
+
+We will touch upon the tests on the autocorrelation and data blocking functions. It is explained in detail in [this Jupyter notebook](4b3934f494a138efa97df063b75ae5c012960ca5) by @mserraperalta, but we will present here the main results.
+
+In order to compute the errors we fit the $`\sigma `$ curve in the data blocking method to a function of the form
+```math
+\sigma (x) = b-ce^{ax},
+```
+
+while for the autocorrelation method, we fit the autocorrelation function to the exponential
+```math
+\chi (x) = e^{-x/\tau}.
+```
+
+
+Since for big values of the argument $`x`$ we start to see large fluctuations in $`\sigma`$ and $`\chi`$ due to the finite amount of correlated data, the main concern is where to trim the data in order to get a nice fit.
+
+For the data blocking method the conclusion was the following: If $`x_{\text{negative}}`$ is defined as the point where the data decreases for the first time, that is, the point where the derivative is negative for the first time, then the trimming point is taken as $`4 x_{\text{negative}}`$. This factor of $`4`$ was found after some manual tests. Here is a graphic example of $`10`$ fits we obtain
+
+![alt text](results/W5_test_data_blocking.png)
+
+The average error between the fit and the data over $`100`$ data sets of $`N = 2000`$ with $`\tau = 15`$ is
+
+```math
+\text{Error} = 0.118 \pm 0.017.
+```
+
+Since the standard deviation in the error is quite small, we can say that our fitting function is reproducible.
+
+For the autocorrelation method, after some tests, we decide to set the trimming point at $`3 \tau`$. Here are 10 fits
+
+![alt text](results/W5_test_autocorrelation.png)
+
+which give a $`\tau = 13.7\pm 1.9`$, where the theoretical $`\tau = 15`$ if we had infinite number of data points.
+
+Applying our autocorrelation function to a dataset of size $`100`$ we find an error
+
+```math
+\text{Error} = 0.120 \pm 0.018.
+```
+
+Finally, applying both the data blocking method and the autocorrelation function to the same data set of size $`100`$, we find
+
+```math
+\text{Error}_{\text{data blocking}} = 0.117 \pm 0.017
+``` 
+
+```math
+\text{Error}_{\text{autocorrelation}} = 0.118 \pm 0.017.
+```
+
+The important conclusion here is that both methods predict the same error.
+
+In [this other Jupyter notebook](4cca5d21eb0fba558bb59d5a680a9d461843fafc) @abermejillo implements functionalities to be able to plot observables with respect to parameters such as temperature or density. The efficiency of the code is also analyzed, to see which functions consume most of the simulation time and, therefore, which functions should be optimized. The conclusions are summarized here.
+
+For simulations in which the only computed observable is the specific heat, a typical distribution of the times taken by each function is
+   - simulate: 66.1%
+   - get_equilibrium: 30.7%
+   - specific_heat_error: 3.1%
+   - rest: 0.1%
+
+This means that most of the time is taken by the evolution of the system, that is, the actual simulation, while some other large part is devoted to getting the system into equilibrium.
+
+On the other hand, a typical distribution of the times for simulations in which we compute the pair correlation function is
+   - simulate: 20%
+   - get_equilibrium: 20%
+   - pair_correlation_function: 60%
+   - rest: negligible
+
+Here most of the time is taken up by the calculation of the pair correlation function. Since this is an observable that we will only calculate three times, at most, to characterize the three phases of Argon, we will not try to optimize it. Another option would be to optimize the simulation of the system (that affects also the equilibration part). However, we find this a difficult task since the main obstacle is the size of the points to calculate. A small attempt was made by cutting the computation of the force between particles whem they are only close enough for it to be of importance. However, in the end this takes as many operations as computing the actual force (which is not costly, we just do it a lot of times).
+
+Finally, let us look at three plots that characterize the three phases of Argon based on the mean absolute displacement ($`a`$ stands for the lattice constant).
+
+Solid $`(T=0.26, a=1.5474) \quad D=(1.28\pm 0.05)\cdot 10^{-3}`$             |  Liquid $`(T=9.93, a=1.5471) \quad D=1.88\pm 0.15`$             |  Gas $`(T=0.71, a = 6.8\cdot 1.5471) \quad D=0.36\pm 0.01`$
+:-------------------------:|:-------------------------:|:-------------------------:
+![alt text](results/W5_displacement_solid.png) |  ![alt text](results/W5_displacement_liquid.png) |  ![alt text](results/W5_displacement_gas.png)
+
+Here we show the square root of the mean squared displacement which should be constant for a solid, proportional to $`\sqrt{t}`$ for liquid and proportional to $`t`$ for gas, due to its ballistic motion. This what we see in these plots.
+
 (due 14 March 2022, 23:59)
