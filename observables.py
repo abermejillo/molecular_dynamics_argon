@@ -481,11 +481,11 @@ def pressure_error(file_name, T, box_length):
 
     # Computation of the error with the autocorrelation function method
     err_AC_second_term = error_autocorrelation(second_term_instantenous)
-    AP_autocorr = particle_num*T*err_AC_second_term/box_length**3 # Through propagation of errors
+    AP_autocorr = (1/(6*particle_num*T))*24*particle_num*T*err_AC_second_term/box_length**3 # Through propagation of errors
 
     # Computation of the error with the data-blocking method
     err_DB_second_term = error_data_blocking(second_term_instantenous)
-    AP_data_block = particle_num*T*err_DB_second_term/box_length**3 # Through propagation of errors
+    AP_data_block = (1/(6*particle_num*T))*24*particle_num*T*err_DB_second_term/box_length**3 # Through propagation of errors
 
     return P, AP_autocorr, AP_data_block
 
