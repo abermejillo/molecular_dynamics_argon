@@ -230,12 +230,18 @@ def correlation_time(data):
     Xa = autocorrelation_function(data)
 
     t = np.arange(len(data)-1)
-    t_tau = np.where(Xa < 1/np.e)[0][0]
+    try:
+        t_tau = np.where(Xa < 1/np.e)[0][0]
+    except:
+        t_tau = int((len(data) - 1)/3)
     t_max = t_tau*3
     
-    function = lambda x,tau: np.exp(-x/tau) # function for fitting the error
-    popt, _ = optimize.curve_fit(function,  t[:t_max],  Xa[:t_max])
-    tau = popt[0]
+    function = lambda x,tau,A,B: A*np.exp(-x/tau) + B # function for fitting the error
+    try:
+        popt, _ = optimize.curve_fit(function,  t[:t_max],  Xa[:t_max])
+        tau = popt[0]
+    except:
+        tau = 0
 
     return tau
 
@@ -267,11 +273,16 @@ def error_data_blocking(data):
         sigma[k] = np.sqrt(((average_blocks**2).sum()/Nb - (average_blocks.sum()/Nb)**2) / (Nb-1)) 
 
     # fitting
-    b_negative = np.where(np.diff(sigma) < 0)[0][0] # find first point that decreases
-    b_max = b_negative*4 # increase the range to have a better fitting
-    function = lambda x,a,b,c: b-c*np.exp(-a*x) # function for fitting the error
+    try:
+        b_negative = np.where(np.diff(sigma) < 0)[0][0] # find first point that decreases
+        b_max = b_negative*4 # increase the range to have a better fitting
+        b_max = min([b_max, len(b_range)])
+    except:
+        b_max = len(b_range)
+
     try: 
-        popt, _ = optimize.curve_fit(function,  b[:b_max],  sigma[:b_max])
+        function = lambda x,a,b,c: b-c*np.exp(-a*x) # function for fitting the error
+        popt, _ = optimize.curve_fit(function,  b_range[:b_max],  sigma[:b_max])
         error = popt[1]
     except: # just in case there is an error in the fitting
         error = np.max(sigma[:b_max])
@@ -329,7 +340,7 @@ def specific_heat_error(file_name):
 
     total_kin = (0.5*(vel**2).sum(2)).sum(1)
     ave_Kin = np.average(total_kin)
-    ave_Kin2 = np.average(total_kin**2) #
+    ave_Kin2 = np.average(total_kin**2)
     r = ave_Kin2/ave_Kin**2 - 1 # relative fluctuations in kinetic energy
 
     c = 1.5/(1-3*particle_num*r/2)
@@ -457,14 +468,14 @@ def pressure_error(file_name, T, box_length):
         rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
         rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
 
-        matrix = (1/(6*particle_num*T))*24*(2/rel_dist**12-1/rel_dist**7)
+        matrix = (2/rel_dist**12 - 1/rel_dist**6)
         matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
 
         second_term_instantenous[k] = matrix.sum()
 
     print("")
 
-    BP_rho = 1 + np.average(second_term_instantenous)
+    BP_rho = 1 + (1/(6*particle_num*T))*24*np.average(second_term_instantenous)
 
     P = BP_rho*T*particle_num/box_length**3
 
