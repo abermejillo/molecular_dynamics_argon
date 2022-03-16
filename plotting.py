@@ -321,7 +321,7 @@ def E_vs_t(data_file, box_dim, kinetic=False, potential=False, total=True, T=Non
     if total:
         ax.plot(time, E_total, "-", label="total E", color="black")
     if kinetic:
-        ax.plot(time, E_kinetic, "-", label="kinetic E", color="red")
+        ax.plot(time, E_kinetic, "-", label="kinetic E", color="cornflowerblue")
     if potential:
         ax.plot(time, E_potential, "-", label="potential E", color="blue")
 
@@ -333,12 +333,14 @@ def E_vs_t(data_file, box_dim, kinetic=False, potential=False, total=True, T=Non
         E_kin_max_error =  [1.5*(N-1)*(T + T_error)/N]*2
         ax.fill_between(x, E_kin_min_error, E_kin_max_error, alpha=0.2, color="gray")
 
-    ax.legend(loc="best")
-
+    ax.legend(loc="lower right",fontsize='large')
+    plt.rc('font', size=15)
+    plt.rc('axes', titlesize=20)
+    plt.rc('axes', labelsize=20) 
     ax.set_xlim(0, np.max(time))
 
-    ax.set_xlabel("dimensionless time")
-    ax.set_ylabel("dimensionless energy per particle")
+    ax.set_xlabel("t $(\sqrt{m\sigma^2/\epsilon})$")
+    ax.set_ylabel("E/N ($\epsilon$)")
 
     # set axis' ticks inside figure
     ax.tick_params(axis="y",direction="in")
@@ -347,7 +349,7 @@ def E_vs_t(data_file, box_dim, kinetic=False, potential=False, total=True, T=Non
     ax.xaxis.set_ticks_position('both')
 
     fig.tight_layout()
-
+    plt.savefig("rescaling.svg")
     plt.show()
     plt.clf()
 
