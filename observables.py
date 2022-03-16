@@ -134,14 +134,14 @@ def pressure(file_name, T, box_length):
         rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
         rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
 
-        matrix = (1/(6*particle_num*T))*24*(2/rel_dist**12-1/rel_dist**7)
+        matrix = (2/rel_dist**12 - 1/rel_dist**6)
         matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
 
         second_term_instantenous[k] = matrix.sum()
 
     print("")
 
-    BP_rho =  1+np.average(second_term_instantenous)
+    BP_rho = 1 + (1/(6*particle_num*T))*24*np.average(second_term_instantenous)
 
     P = BP_rho*T*particle_num/box_length**3
 
