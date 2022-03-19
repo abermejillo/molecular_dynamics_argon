@@ -22,13 +22,13 @@ num_tsteps = 1000
 algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
-simulation = ["equilibrium", "simulation"]
-observables = ["pair_correlation", "specific_heat", "pressure", "diffusion"]
-plotting = ["gif", "Evst"]
+simulation = ["equilibrium", "simulation"] # ["equilibrium", "simulation"]
+observables = ["pair_correlation", "specific_heat", "pressure", "diffusion"] # ["pair_correlation", "specific_heat", "pressure", "diffusion"]
+plotting = ["gif", "Evst"] # ["gif", "Evst"]
 
 ##########################################################
-
-print("Nparticles={}, lattice_const={}, box_dimension={}, temperature={}, run_time={}, num_tsteps={}, algorithm_method={}".format(particle_num, lattice_const, (int(((particle_num - 1)/4)**(1/3)) + 1)*lattice_const, temperature, run_time, num_tsteps, algorithm_method))
+box_length = (int(((particle_num - 1)/4)**(1/3)) + 1)*lattice_const
+print("Nparticles={}, lattice_const={}, box_dimension={}, temperature={}, run_time={}, num_tsteps={}, algorithm_method={}".format(particle_num, lattice_const, box_length, temperature, run_time, num_tsteps, algorithm_method))
 
 # 1. Get system to equilibrium
 if "equilibrium" in simulation:
@@ -90,7 +90,7 @@ if "diffusion" in observables:
 
 if "pressure" in observables:
 	print("CALCULATING PRESSURE")
-	eq_pos, eq_vel = sim.load_final_data("output.csv")
+	eq_pos, eq_vel = sim.load_final_data("output_eq.csv")
 	temperature_eq = sim.temperature(eq_vel)
 	P, AP_autocorr, AP_datablock = obs.pressure_error("output.csv", temperature_eq, box_length)
 	print("pressure (T = {:0.5f}) = {:0.5f} +-autocorrelation {:0.5f} or +- databloking {:0.5f}".format(temperature_eq, P, AP_autocorr, AP_datablock))
