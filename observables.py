@@ -175,7 +175,7 @@ def mean_squared_displacement(file_name, time_steps=None):
 
     for k, t in enumerate(time_steps):
         dist = (pos[k] - pos[0])
-        dist = (dist*dist).sum(axis=1)**0.5
+        dist = (dist*dist).sum(axis=1)
         Ax2[k] = dist.sum()/particle_num
 
     return time_steps, Ax2
