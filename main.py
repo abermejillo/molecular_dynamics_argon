@@ -9,7 +9,7 @@ import observables as obs
 
 ##########################################################
 
-particle_num = 4*(2**3) 
+particle_num = 4*(5**3) 
 dim = 3
 lattice_const = 2*1.5471 
 temperature = 0.1 
@@ -17,7 +17,7 @@ temperature_error = 0.01
 rescale_time = 0.1 
 
 run_time = 2
-num_tsteps = 200 
+num_tsteps = 2000 
 algorithm_method = "verlet"
 
 simulation = ["equilibrium", "simulation"] 
