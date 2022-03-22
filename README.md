@@ -2,7 +2,7 @@
 
 Classical dynamics of $`N`$ Argon atoms inside a $`d`$-dimensional box with periodic boundary conditions. 
 
-The atom-pair interaction is modelled as a Lennard-Jones potential and the numerical evolution can be done using the Euler method or the velocity-Verlet algorithm. The observables than can be calculated are (1) pair correlation function, (2) specific heat, (3) mean-squared displacement, (4) diffusion constant and (5) pressure. 
+The atom-pair interaction is modelled as a Lennard-Jones potential and the numerical evolution can be done using the Euler method or the velocity-Verlet algorithm. The observables that can be calculated are (1) pair correlation function, (2) specific heat, (3) mean-squared displacement, (4) diffusion constant and (5) pressure. 
 
 
 ## Setup
