@@ -198,6 +198,8 @@ def plot_pos_3D(ax, pos, L, central_box=True, relative_pos=False, outer_boxes=Fa
         If True, plots square box
     relative_pos : bool
         If True, plots line between closest pairs of all particles
+    outer_boxes : bool
+        If True, plots periodic images of the particles
 
     Returns
     -------
@@ -294,8 +296,17 @@ def E_vs_t(data_file, box_dim, kinetic=False, potential=False, total=True, T=Non
         Name of the CSV file in which the data is stored
     box_dim : float
         Dimensions of the simulation box
-    kinetic_potential : bool
-        If True, plots also kinetic and potential energies
+    kinetic : bool
+        If True, plots kinetic energy
+    potential : bool
+        If True, plots potential energy
+    total : bool
+        If True, plots total energy
+    T : float
+        If not None, plots kinetic energy corresponding to a temperature T
+    T_error : float
+        If not None, plots a shaded region around kinetic energy of T
+        of height 2*T_error
 
     Returns
     -------
@@ -504,7 +515,7 @@ def GIF_potential_energy(gif_name, data_file, num_frames, i , j, box_dim):
         E_potential += [4*(1/rel_dist[-1]**12-1/rel_dist[-1]**6)]
         E_total += [E_kinetic[-1] + E_potential[-1]]
 
-    # Generate data to plat the Lennard-Jones potential from rmin to rmax
+    # Generate data to plot the Lennard-Jones potential from rmin to rmax
     rmin = np.min(rel_dist)
     rmax = np.max(rel_dist)
     N = 100
@@ -555,7 +566,7 @@ def GIF_potential_energy(gif_name, data_file, num_frames, i , j, box_dim):
 
 def merge_GIF_3D(gif_name, data_file1, data_file2, num_frames, box_dim):
     """
-    Generates frames for the time evolution of particles in 2D, merging
+    Generates frames for the time evolution of particles in 3D, merging
     two different simulations and stores them in "tmp-plot" folder as 
     "pair_int_2D{:05d}.png". 
 
@@ -565,7 +576,7 @@ def merge_GIF_3D(gif_name, data_file1, data_file2, num_frames, box_dim):
         Name of the GIF file to be generated
     data_file1 : str
         Name of the CSV file in which the data is stored
-    data_file1 : str
+    data_file2 : str
         Name of the CSV file in which the data is stored
     num_frames : int
         Number of total frames generated (max is 99999)
@@ -615,7 +626,7 @@ def merge_GIF_3D(gif_name, data_file1, data_file2, num_frames, box_dim):
 
 def plot_maxwell_distribution(init_vel, temp):
     """
-    Generates a plot that shows a probability density of a a particle having a given velocity. 
+    Generates a plot that shows the velocity distribution of init_vel. 
     A gaussian distribution with standard deviation \sqrt(temperature) is shown on top of it.
 
     Parameters
@@ -643,6 +654,21 @@ def plot_maxwell_distribution(init_vel, temp):
 
 
 def plot_pair_correlation_function(r, g):
+    """
+    Plots the pair correlation function
+
+    Parameters
+    ----------
+    r : np.ndarray
+        Distance between pairs of particles
+    g : np.ndarray(len(r))
+        Pair correlation function as a function of r
+    
+    Returns
+    -------
+    None
+    """
+
     plt.plot(r, g)
     plt.xlabel("$r/\sigma$")
     plt.ylabel("$g(r/\sigma)$")
@@ -652,6 +678,21 @@ def plot_pair_correlation_function(r, g):
 
 
 def plot_Ax2(time, Ax2):
+    """
+    Plots the mean squared displacement
+
+    Parameters
+    ----------
+    time : np.ndarray
+        Array of times in which to plot the mean-squared displacement
+    Ax2 : np.ndarray(len(time))
+        Mean-squared displacement as a function of time
+    
+    Returns
+    -------
+    None
+    """
+
     plt.plot(time, Ax2)
     plt.xlabel("adimensional $t$")
     plt.ylabel("adimensional $\Delta x^2(t)$")

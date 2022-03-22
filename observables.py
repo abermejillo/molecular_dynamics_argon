@@ -18,7 +18,7 @@ def pair_correlation_function(file_name, dr, box_length, r_max=None):
     dr : float
 		Distance between bins in the histogram
 	box_length : float
-		Box size
+		Box length
     r_max : float
         Maximum value for r (distance between particles)
 
@@ -112,7 +112,7 @@ def pressure(file_name, T, box_length):
     T : float
         Temperature
     box_length : float
-		Box size
+		Box length
 
     Returns
     -------
@@ -191,12 +191,12 @@ def autocorrelation_function(data):
 
     Parameters
     ----------
-    data : np.ndarray(len(time))
+    data : np.ndarray
         Variable as a function of time
 
     Returns
     -------
-    Xa : np.ndarray(len(time)-1)
+    Xa : np.ndarray(len(data)-1)
         Autocorrelation function for the given variable as a function of time
     """
 
@@ -217,7 +217,7 @@ def correlation_time(data):
 
     Parameters
     ----------
-    data : np.ndarray(len(time))
+    data : np.ndarray
         Variable as a function of time
 
     Returns
@@ -252,7 +252,7 @@ def error_data_blocking(data):
 
     Parameters
     ----------
-    data : np.ndarray(len(time))
+    data : np.ndarray
         Variable as a function of time
 
     Returns
@@ -296,7 +296,7 @@ def error_autocorrelation(data):
 
     Parameters
     ----------
-    data : np.ndarray(len(time))
+    data : np.ndarray
         Variable as a function of time
 
     Returns
@@ -373,7 +373,7 @@ def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
     dr : float
         Distance between bins in the histogram
     box_length : float
-        Box size
+        Box length
     r_max : float
         Maximum value for r (distance between particles)
 
@@ -440,7 +440,7 @@ def pressure_error(file_name, T, box_length):
     T : float
         Temperature
     box_length : float
-		Box size
+		Box length
 
     Returns
     -------
@@ -505,7 +505,7 @@ def diffusion_error(file_name):
     D : float
         Diffusion constant
     AD : float
-        Erro of the diffusion constant
+        Error of the diffusion constant
     """
 
     # Calculation of diffusion coefficient

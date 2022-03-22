@@ -114,7 +114,7 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, metho
     file_name : str
         Name of the CSV file to store the simulation data
     method : "verlet" or "euler"
-        Selects method for the time evoluiton algorithm
+        Selects method for the time evolution algorithm
 
     Returns
     -------
@@ -158,6 +158,8 @@ def rescale_velocity(vel, T, T_current=None):
         Array of particle velocities
     T : float
         (unitless) desired temperature of the system
+    T_current : float
+        (unitless) actual temperature of the system before the reescaling
 
     Returns
     -------
@@ -177,7 +179,7 @@ def rescale_velocity(vel, T, T_current=None):
 
 def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, file_name, method="verlet", resc_thr=[1E-2, 0.1]):
     """
-    Given a temperature and initial positions and velocities, sets the system under equilibrium
+    Given a temperature, initial positions and velocities, sets the system under equilibrium
     (up to some error given by the parameters in 'resc_thr'). 
     N = number of particles
     d = dimensionality of the box
@@ -196,13 +198,13 @@ def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, fi
         Dimensions of the simulation box
     T : float
         Temperature of the system
-    resc_thr : [float, float]
-        First argument is the error for the temperature of the system (to do rescalings)
-        Second argument is the minimum time between reescalings (to let the system equilibrate)
     file_name : str
         Name of the CSV file to store the simulation data
     method : "verlet" or "euler"
         Selects method for the time evoluiton algorithm
+    resc_thr : [float, float]
+        First argument is the error for the temperature of the system (to do rescalings)
+        Second argument is the minimum time between reescalings (to let the system equilibrate)
 
     Returns
     -------
@@ -316,7 +318,7 @@ def lj_force(rel_pos, rel_dist):
 
     Returns
     -------
-    np.ndarray(N,d)
+    total_force : np.ndarray(N,d)
         Net force acting on each particle due to all other particles
     """
 
@@ -349,6 +351,8 @@ def fcc_lattice(num_atoms, lattice_const):
     -------
     pos : np.ndarray(num_atoms,3)
         Array of particle coordinates
+    L : float
+        Length of the box that encloses the lattice
     """
     b = int(((num_atoms-1)/4)**(1/3)) + 1 # Minimum number of nodes that the lattice will have in each direction | (N-1) to solve when N = 4*b^3
 
@@ -364,12 +368,12 @@ def fcc_lattice(num_atoms, lattice_const):
     pos = np.append(pos, (director_vectors[2] + combinations_vectors)*lattice_const, axis=0)
     pos = np.append(pos, (director_vectors[3] + combinations_vectors)*lattice_const, axis=0)
 
-    pos = pos + lattice_const/4 # to put FCC away from the BC
+    pos = pos + lattice_const/4 # to put FCC away from the boundary
 
     # delete extra atoms
     pos = pos[:num_atoms]
 
-    # box dimension
+    # box length
     L = b*lattice_const
 
     return pos, L
@@ -469,15 +473,15 @@ def potential_energy(pos, box_dim):
 
     Returns
     -------
-    float
+    pot_energy : float
         Total potential energy of the system
     """
     _, rel_dist = atomic_distances(pos, box_dim)
     rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating potential energy
 
-    mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool) # mask for skipping diagonal terms
+    mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool) # mask for skipping diagonal terms (no self_interaction)
     pot_energy = 4*(1/rel_dist**12-1/rel_dist**6)
-    pot_energy = np.sum(pot_energy, where=mask)/2 # The diagonal terms are skipped (no self-interaction)
+    pot_energy = np.sum(pot_energy, where=mask)/2
 
     return pot_energy
 
@@ -523,7 +527,7 @@ def temperature(vel):
     Returns
     -------
     T : float
-        (unitless) desired temperature of the system
+        (unitless) temperature of the system
     """
 
     particle_num = vel.shape[0]
@@ -593,7 +597,7 @@ def load_data(file_name):
     pos : np.ndarray(M,N,d)
         Positions of the particles for all the time steps of the simulation
     vel: np.ndarray(M,N,d)
-        Velocities of particles for all the time steps of the simulation
+        Velocities of the particles for all the time steps of the simulation
     """
 
     # load header information
@@ -631,9 +635,9 @@ def load_initial_data(file_name):
     Returns
     -------
     init_pos : np.ndarray(N,d)
-        Positions of the particles for all the time steps of the simulation
+        Initial positions of the particles
     init_vel: np.ndarray(N,d)
-        Velocities of particles for all the time steps of the simulation
+        Initial velocities of the particles
     """
 
     # load header information
@@ -668,10 +672,10 @@ def load_final_data(file_name):
 
     Returns
     -------
-    init_pos : np.ndarray(N,d)
-        Positions of the particles for all the time steps of the simulation
-    init_vel: np.ndarray(N,d)
-        Velocities of particles for all the time steps of the simulation
+    final_pos : np.ndarray(N,d)
+        Final positions of the particles
+    final_vel: np.ndarray(N,d)
+        Final velocities of the particles
     """
 
     # load header information

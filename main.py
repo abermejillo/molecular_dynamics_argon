@@ -23,7 +23,7 @@ algorithm_method = "verlet" # options: "verlet" or "euler"
 
 # List of simulation steps and observables to calculate
 simulation = ["equilibrium", "simulation"] # ["equilibrium", "simulation"]
-observables = ["pair_correlation", "specific_heat", "pressure", "diffusion"] # ["pair_correlation", "specific_heat", "pressure", "diffusion"]
+observables = ["pair_correlation", "specific_heat", "pressure", "diffusion"] # ["pair_correlation", "specific_heat", "pressure", "diffusion", "displacement"]
 plotting = ["gif", "Evst"] # ["gif", "Evst"]
 
 ##########################################################
