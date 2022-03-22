@@ -3,9 +3,9 @@ from scipy import optimize
 
 import simulate as sim
 
-#---------------------------------------------------------
-# FIRST FUNCTION BLOCK: OBSERVABLES WITHOUT ERROR
-#---------------------------------------------------------
+#------------------------------
+# 1. Observables without errors
+#------------------------------
 
 def pair_correlation_function(file_name, dr, box_length, r_max=None):
     """
@@ -31,7 +31,7 @@ def pair_correlation_function(file_name, dr, box_length, r_max=None):
     """
 
     if r_max is None: r_max = box_length
-    r = np.arange(dr, r_max+dr, dr) # start != 0, because g = 1/0 is not defined
+    r = np.arange(dr, r_max+dr, dr) # start != 0, because g(r) = 1/0 is not defined
     n = np.zeros(len(r))
     time, pos, _ = sim.load_data(file_name)
     particle_num = pos.shape[0]
@@ -51,7 +51,7 @@ def pair_correlation_function(file_name, dr, box_length, r_max=None):
 
 def specific_heat(file_name):
     """
-    Computes the specific heat per atom of a system.
+    Returns the specific heat per atom of a system.
 
     Parameters
     ----------
@@ -79,7 +79,7 @@ def specific_heat(file_name):
 
 def diffusion(file_name):
     """
-    Computes the diffussion constant D. 
+    Returns the diffussion constant D. 
 
     Parameters
     ----------
@@ -103,7 +103,7 @@ def diffusion(file_name):
 
 def pressure(file_name, T, box_length):
     """
-    Computes the pressure of the system.
+    Returns the pressure of the system.
 
     Parameters
     ----------
@@ -131,8 +131,8 @@ def pressure(file_name, T, box_length):
 
         _, rel_dist = sim.atomic_distances(pos[k], box_length)
 
-        rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
-        rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
+        rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation so that it agrees with rel_pos dimensions
+        rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoids division by zero in the diagonal when calculating LJ force
 
         matrix = (2/rel_dist**12 - 1/rel_dist**6)
         matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
@@ -181,9 +181,9 @@ def mean_squared_displacement(file_name, time_steps=None):
     return time_steps, Ax2
 
 
-#---------------------------------------------------------
-# SECOND FUNCTION BLOCK: AUXILIARY FUNCTIONS FOR OBSERVABLES AND ERROR COMPUTATION
-#---------------------------------------------------------
+#-------------------------------------------------------------
+# 2. Auxiliary functions for observables and error computation
+#-------------------------------------------------------------
 
 def autocorrelation_function(data):
     """
@@ -226,7 +226,6 @@ def correlation_time(data):
         Autocorrelation time for the given variable.
     """
 
-    # autocorrelation function
     Xa = autocorrelation_function(data)
 
     t = np.arange(len(data)-1)
@@ -275,7 +274,7 @@ def error_data_blocking(data):
     # fitting
     try:
         b_negative = np.where(np.diff(sigma) < 0)[0][0] # find first point that decreases
-        b_max = b_negative*4 # increase the range to have a better fitting
+        b_max = b_negative*4 
         b_max = min([b_max, len(b_range)])
     except:
         b_max = len(b_range)
@@ -312,13 +311,14 @@ def error_autocorrelation(data):
     return error
 
 
-#---------------------------------------------------------
-# THIRD FUNCTION BLOCK: OBSERVABLES WITH ERROR COMPUTATION
-#---------------------------------------------------------
+#--------------------------------------
+# 3. Observables with error computation
+#--------------------------------------
 
 def specific_heat_error(file_name):
     """
-    Computes the specific heat per atom of a system. Gives the error with autocorrelation function method.
+    Computes the specific heat per atom of a system 
+    and its error with autocorrelation function and data blocking method.
 
     Parameters
     ----------
@@ -364,7 +364,8 @@ def specific_heat_error(file_name):
 
 def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
     """
-    Returns the pair correlation function averaged over time and its respective error. 
+    Returns the pair correlation function averaged over time 
+    and its error with autocorrelation function and data blocking method. 
 
     Parameters
     ----------
@@ -393,7 +394,7 @@ def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
     time, pos, _ = sim.load_data(file_name)
     particle_num = pos.shape[1]
     num_tsteps = len(time)
-    r = np.arange(dr, r_max+dr, dr) # start != 0, because g = 1/0 is not defined
+    r = np.arange(dr, r_max+dr, dr) # start != 0, because g(r) = 1/0 is not defined
     n_time = np.zeros((num_tsteps, len(r)))
 
     for k, t in enumerate(time):
@@ -430,8 +431,8 @@ def pair_correlation_function_error(file_name, dr, box_length, r_max=None):
 
 def pressure_error(file_name, T, box_length):
     """
-    Computes the pressure of the system. Gives the errors computed with the
-    autocorrelation function and the data-blocking method
+    Computes the pressure of the system
+    and its error with autocorrelation function and data blocking method.
 
     Parameters
     ----------
@@ -452,7 +453,6 @@ def pressure_error(file_name, T, box_length):
         Error computed with the data-blocking method
     """
 
-    # Calculation of pressure
     time, pos, _ = sim.load_data(file_name)
 
     particle_num = np.shape(pos)[1]
@@ -465,8 +465,8 @@ def pressure_error(file_name, T, box_length):
 
         _, rel_dist = sim.atomic_distances(pos[k], box_length)
 
-        rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
-        rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
+        rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation so that it agrees with rel_pos dimensions
+        rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoids division by zero in the diagonal when calculating LJ force
 
         matrix = (2/rel_dist**12 - 1/rel_dist**6)
         matrix[np.diag_indices(np.shape(matrix)[0])] = 0 # diagonal terms should be zero by definition
@@ -481,11 +481,11 @@ def pressure_error(file_name, T, box_length):
 
     # Computation of the error with the autocorrelation function method
     err_AC_second_term = error_autocorrelation(second_term_instantenous)
-    AP_autocorr = (1/(6*particle_num*T))*24*particle_num*T*err_AC_second_term/box_length**3 # Through propagation of errors
+    AP_autocorr = (1/(6*particle_num*T))*24*particle_num*T*err_AC_second_term/box_length**3 # using propagation of errors
 
     # Computation of the error with the data-blocking method
     err_DB_second_term = error_data_blocking(second_term_instantenous)
-    AP_data_block = (1/(6*particle_num*T))*24*particle_num*T*err_DB_second_term/box_length**3 # Through propagation of errors
+    AP_data_block = (1/(6*particle_num*T))*24*particle_num*T*err_DB_second_term/box_length**3 # using propagation of errors
 
     return P, AP_autocorr, AP_data_block
 
@@ -507,8 +507,6 @@ def diffusion_error(file_name):
     AD : float
         Error of the diffusion constant
     """
-
-    # Calculation of diffusion coefficient
 
     time, pos, _ = sim.load_data(file_name)
     particle_num = pos.shape[1]

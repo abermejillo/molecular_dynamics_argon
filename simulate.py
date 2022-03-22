@@ -1,8 +1,8 @@
 import numpy as np
 
 KB = 1.3806E-23 # Boltzmann constant in SI
-SIGMA = 3.405E-10 # parameter of LJ potential for Argon atoms in SI
-EPSILON = 119.8*KB # parameter of LJ potential for Argon atoms in SI
+SIGMA = 3.405E-10 # $\sigma$ of L-J potential for Argon in SI
+EPSILON = 119.8*KB # $\epsilon$ of L-J potential for Argon in SI
 MASS = 6.6335209E-26 # Argon particle mass in SI
 
 #--------------------------------------------------
@@ -19,9 +19,9 @@ def simulate_step_euler(pos, vel, timestep, box_dim):
     Parameters
     ----------
     pos : np.ndarray(N,d)
-        Positions of the atoms in Cartesian space
+        Positions of the particles in Cartesian space
     vel : np.ndarray(N,d)
-        Velocities of the atoms in Cartesian space
+        Velocities of the particles in Cartesian space
     timestep : float
         Duration of a single simulation step
     box_dim : float
@@ -30,15 +30,14 @@ def simulate_step_euler(pos, vel, timestep, box_dim):
     Returns
     -------
     pos : np.ndarra(N,d)
-        Positions of the atoms in Cartesian space after one time step
+        Positions of the particles in Cartesian space after one time step
     vel : np.ndarra(N,d)
-        Velocities of the atoms in Cartesian space after one time step
+        Velocities of the particles in Cartesian space after one time step
     """
     
     rel_pos, rel_dist = atomic_distances(pos, box_dim)
     total_force = lj_force(rel_pos, rel_dist)
 
-    # Update velocities and positions with Euler method
     pos = pos + vel*timestep
     vel = vel + total_force*timestep
 
@@ -58,9 +57,9 @@ def simulate_step_verlet(pos, vel, timestep, box_dim):
     Parameters
     ----------
     pos : np.ndarray(N,d)
-        Positions of the atoms in Cartesian space
+        Positions of the particles in Cartesian space
     vel : np.ndarray(N,d)
-        Velocities of the atoms in Cartesian space
+        Velocities of the particles in Cartesian space
     timestep : float
         Duration of a single simulation step
     box_dim : float
@@ -69,20 +68,17 @@ def simulate_step_verlet(pos, vel, timestep, box_dim):
     Returns
     -------
     pos : np.ndarra(N,d)
-        Positions of the atoms in Cartesian space after one time step
+        Positions of the particles in Cartesian space after one time step
     vel : np.ndarra(N,d)
-        Velocities of the atoms in Cartesian space after one time step
+        Velocities of the particles in Cartesian space after one time step
     """
     
     rel_pos, rel_dist = atomic_distances(pos, box_dim)
     total_force = lj_force(rel_pos, rel_dist)
 
-    # Update velocities and positions with velocity-Verlet method
     pos = pos + vel*timestep + 0.5*timestep**2*total_force
-
     rel_pos, rel_dist = atomic_distances(pos, box_dim)
     total_force_next = lj_force(rel_pos, rel_dist)
-
     vel = vel + 0.5*(total_force + total_force_next)*timestep
 
     # Update positions due to periodic BC
@@ -102,9 +98,9 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, metho
     Parameters
     ----------
     init_pos : np.ndarray(N,d)
-        Initial positions of the atoms in Cartesian space
+        Initial positions of the particles in Cartesian space
     init_vel : np.ndarray(N,d)
-        Initial velocities of the atoms in Cartesian space
+        Initial velocities of the particles in Cartesian space
     num_tsteps : int
         Total number of simulation steps
     timestep : float
@@ -124,7 +120,7 @@ def simulate(init_pos, init_vel, num_tsteps, timestep, box_dim, file_name, metho
     pos, vel = init_pos, init_vel
     f = open(file_name, "w")
     f.write("N={} d={}\n".format(pos.shape[0], pos.shape[1])) # header
-    save_data(f, 0, pos, vel) # save initial position
+    save_data(f, 0, pos, vel) # saves initial position
     
     for k in np.arange(1, num_tsteps+1):
         print("\rtime step : {:7d}/{}".format(k, num_tsteps), end="")
@@ -155,18 +151,18 @@ def rescale_velocity(vel, T, T_current=None):
     Parameters
     ----------
     vel : np.ndarray(N,d)
-        Array of particle velocities
+        Velocities of particles
     T : float
-        (unitless) desired temperature of the system
-    T_current : float
-        (unitless) actual temperature of the system before the reescaling
+        Desired temperature of the system
+    T_current : float or None type
+        Temperature of the system before the reescaling
 
     Returns
     -------
     resc_vel : np.ndarray(N,d)
-        Rescaled array of particle velocities
+        Rescaled velocities of particles
     T_current : float
-        (unitless) actual temperature of the system before the reescaling
+        Temperature of the system before the reescaling
     """
 
     if T_current is None:
@@ -187,9 +183,9 @@ def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, fi
     Parameters
     ----------
     init_pos : np.ndarray(N,d)
-        Initial positions of the atoms in Cartesian space
+        Initial positions of the particles in Cartesian space
     init_vel : np.ndarray(N,d)
-        Initial velocities of the atoms in Cartesian space
+        Initial velocities of the particles in Cartesian space
     max_num_tsteps : int
         Maximum number of simulation steps before reaching equilibrium
     timestep : float
@@ -215,7 +211,7 @@ def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, fi
     pos, vel = init_pos, init_vel
     f = open(file_name, "w")
     f.write("N={} d={}\n".format(pos.shape[0], pos.shape[1])) # header
-    save_data(f, 0, pos, vel) # save initial position
+    save_data(f, 0, pos, vel) # saves initial position
 
     rescaling = [[1,0]] # [temperature of the system, time of the reescaling]
     eq_reached = False # if False, continues to check rescaling
@@ -242,17 +238,16 @@ def get_equilibrium(init_pos, init_vel, max_num_tsteps, timestep, box_dim, T, fi
         if eq_reached:
             break
 
-    print("\rtime step : {:7d}/{} | temperature={:0.5f}/{:0.5f}".format(k, max_num_tsteps, T_current, T), end="")
+    print("\rtime step : {:7d}/{} | temperature={:0.5f}/{:0.5f}".format(k, max_num_tsteps, T_current, T))
 
-    print("")
     f.close()
 
     return eq_reached
 
 
-#------------------------------------------------------------------
-# 3. Necessary parameters for the time evolution
-# ----------------------------------------------------------------- 
+#------------------------------------
+# 3. Functions for the time evolution
+# ----------------------------------- 
 
 def atomic_distances(pos, box_dim):
     """
@@ -293,7 +288,7 @@ def atomic_distances(pos, box_dim):
     pos1 = np.repeat(pos[:, np.newaxis, :], particle_num, axis=1)
     pos2 = np.repeat(pos[np.newaxis, :, :], particle_num, axis=0)
     rel_pos = pos1 - pos2
-    # check if using the minimum distance between pairs due to BC
+    # impose minimum distance between pairs due to periodic BC
     wrong_pairs = np.where(np.abs(rel_pos) > box_dim/2)
     rel_pos[wrong_pairs] = rel_pos[wrong_pairs] - np.sign(rel_pos[wrong_pairs])*box_dim
 
@@ -305,7 +300,7 @@ def atomic_distances(pos, box_dim):
 
 def lj_force(rel_pos, rel_dist):
     """
-    Calculates the net forces on each atom.
+    Calculates the net forces on each particle interacting with a Lennard-Jones potential.
     N = number of particles
     d = dimensionality of the box
 
@@ -322,56 +317,56 @@ def lj_force(rel_pos, rel_dist):
         Net force acting on each particle due to all other particles
     """
 
-    rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation (so that it agrees with rel_pos dimensions)
-    rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating LJ force
+    rel_dist = rel_dist[:,:,np.newaxis] # add axis for LJ force calculation so that it agrees with rel_pos dimensions
+    rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoids division by zero in the diagonal when calculating LJ force
 
-    # Force calculation using the Lennard-Jones potential
+    # Force calculation 
     force = 24*rel_pos*(2/rel_dist**14 - 1/rel_dist**8)
     total_force = force.sum(1)
 
     return total_force
 
 
-#------------------------------------------------------
+#----------------------------------------
 # 4. Position and velocity initialization
-#------------------------------------------------------
+#----------------------------------------
 
-def fcc_lattice(num_atoms, lattice_const):
+def fcc_lattice(particle_num, lattice_const):
     """
-    Initializes a system of atoms on an fcc lattice for periodic BC.
+    Initializes a system of particles on an FCC lattice.
 
     Parameters
     ----------
-    num_atoms : int
+    particle_num : int
         The number of particles in the system
     lattice_const : float
-        The lattice constant for an fcc lattice
+        The lattice constant for an FCC lattice
 
     Returns
     -------
-    pos : np.ndarray(num_atoms,3)
-        Array of particle coordinates
+    pos : np.ndarray(particle_num,3)
+        Coordinates of particles
     L : float
         Length of the box that encloses the lattice
     """
-    b = int(((num_atoms-1)/4)**(1/3)) + 1 # Minimum number of nodes that the lattice will have in each direction | (N-1) to solve when N = 4*b^3
+    b = int(((particle_num-1)/4)**(1/3)) + 1 # Minimum number of nodes that the lattice will have in each direction | (N-1) to solve when particle_num = 4*b^3
 
     # create position vectors for all cells
     xij = np.arange(0, b)
     combinations_vectors = np.transpose(np.meshgrid(xij, xij, xij), (2,1,3,0)).reshape(-1, 3)
 
-    # fill cells with atoms in fcc positions
+    # fill cells with particles in FCC positions
     director_vectors = np.array([[0,0,0], [1,1,0], [1,0,1], [0,1,1]])*1/2
-
     pos = (director_vectors[0] + combinations_vectors)*lattice_const
     pos = np.append(pos, (director_vectors[1] + combinations_vectors)*lattice_const, axis=0)
     pos = np.append(pos, (director_vectors[2] + combinations_vectors)*lattice_const, axis=0)
     pos = np.append(pos, (director_vectors[3] + combinations_vectors)*lattice_const, axis=0)
 
-    pos = pos + lattice_const/4 # to put FCC away from the boundary
+    # shifts FCC away from the boundary
+    pos = pos + lattice_const/4 
 
-    # delete extra atoms
-    pos = pos[:num_atoms]
+    # delete extra particles
+    pos = pos[:particle_num]
 
     # box length
     L = b*lattice_const
@@ -407,7 +402,7 @@ def random_gaussian_vector(num, sigma):
     return gaussian_dist
 
 
-def init_velocity(num_atoms, temp):
+def init_velocity(particle_num, T):
     """
     Initializes the system with Gaussian distributed velocities.
     N = number of particles
@@ -415,10 +410,10 @@ def init_velocity(num_atoms, temp):
 
     Parameters
     ----------
-    num_atoms : int
+    particle_num : int
         Number of particles in the system
-    temp : float
-        (unitless) temperature of the system
+    T : float
+        Temperature of the system
 
     Returns
     -------
@@ -426,9 +421,9 @@ def init_velocity(num_atoms, temp):
         Array of particle velocities
     """
 
-    vel = np.array([random_gaussian_vector(num_atoms, np.sqrt(temp)),\
-                    random_gaussian_vector(num_atoms, np.sqrt(temp)),\
-                    random_gaussian_vector(num_atoms, np.sqrt(temp))])
+    vel = np.array([random_gaussian_vector(particle_num, np.sqrt(T)),\
+                    random_gaussian_vector(particle_num, np.sqrt(T)),\
+                    random_gaussian_vector(particle_num, np.sqrt(T))])
     vel = vel.T
     
     return vel
@@ -440,7 +435,7 @@ def init_velocity(num_atoms, temp):
 
 def kinetic_energy(vel):
     """
-    Computes the kinetic energy of an atomic system.
+    Computes the kinetic energy of the system.
     N = number of particles
     d = dimensionality of the box
 
@@ -460,7 +455,7 @@ def kinetic_energy(vel):
 
 def potential_energy(pos, box_dim):
     """
-    Computes the potential energy of an atomic system.
+    Computes the potential energy of the system.
     N = number of particles
     d = dimensionality of the box
 
@@ -477,7 +472,7 @@ def potential_energy(pos, box_dim):
         Total potential energy of the system
     """
     _, rel_dist = atomic_distances(pos, box_dim)
-    rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoiding division by zero in the diagonal when calculating potential energy
+    rel_dist[np.diag_indices(np.shape(rel_dist)[0])] = 1 # avoids division by zero in the diagonal when calculating potential energy
 
     mask = np.array(1 - np.identity(rel_dist.shape[0]), dtype=bool) # mask for skipping diagonal terms (no self_interaction)
     pot_energy = 4*(1/rel_dist**12-1/rel_dist**6)
@@ -488,7 +483,7 @@ def potential_energy(pos, box_dim):
 
 def total_energy(pos, vel, box_dim): 
     """
-    Computes the total energy of an atomic system
+    Computes the total energy of the system.
     N = number of particles
     d = dimensionality of the box
 
@@ -515,19 +510,19 @@ def total_energy(pos, vel, box_dim):
 
 def temperature(vel):
     """
-    Returns the temperature of the system given its velocities
+    Returns the temperature of the system given its velocities. 
     N = number of particles
     d = dimensionality of the box
 
     Parameters
     ----------
     vel : np.ndarray(N,d)
-        Array of particle velocities
+        Velocities of particles
 
     Returns
     -------
     T : float
-        (unitless) temperature of the system
+        (Temperature of the system
     """
 
     particle_num = vel.shape[0]
