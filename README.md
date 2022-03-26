@@ -35,5 +35,5 @@ For a more detailed information of the available plots (including e.g. histogram
 
 ## Authors 
 - Álvaro Bermejillo Seco
-- Dani Bedialauneta Rodríguez
+- Daniel Bedialauneta Rodríguez
 - Marc Serra Peralta
